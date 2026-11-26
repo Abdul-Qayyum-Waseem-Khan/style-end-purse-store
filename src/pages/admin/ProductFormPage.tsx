@@ -27,7 +27,7 @@ const LUXURY_PALETTE = [
 // Zod Schema for validation
 const productSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  productType: z.enum(['single', 'bundle', 'set']).default('single'),
+  productType: z.enum(['single', 'bundle', 'set']),
   shortDescription: z.string().max(250, 'Must be under 250 characters').optional(),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   originalPrice: z.number().min(0, 'Original price must be a positive number'),
@@ -89,20 +89,13 @@ export function ProductFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
 
-  // Dynamic Color Variants state
-  const [colors, setColors] = useState<ColorOption[]>([
-    { name: 'Noir Obsidian', hex: '#111827', stock: 10 },
-    { name: 'Champagne Gold', hex: '#B8924B', stock: 10 },
-  ]);
+  // Dynamic Color Variants state (optional — empty by default)
+  const [colors, setColors] = useState<ColorOption[]>([]);
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#111827');
 
-  // Dynamic Set / Bundle Options state
-  const [setOptions, setSetOptions] = useState<SetOptionItem[]>([
-    { name: 'Purse Only', price: 9500, comparePrice: 12000, includedItems: ['Luxury Handbag', 'Dust Bag'], isDefault: true },
-    { name: 'Pouch Only', price: 3500, comparePrice: 4500, includedItems: ['Matching Zipper Pouch'], isDefault: false },
-    { name: 'Complete 3-in-1 Set (Purse + Pouch + Wallet)', price: 14500, comparePrice: 18500, includedItems: ['Luxury Handbag', 'Matching Pouch', 'Artisan Card Wallet', 'Gold Chain Strap'], isDefault: false }
-  ]);
+  // Dynamic Set / Bundle Options state (optional — empty by default)
+  const [setOptions, setSetOptions] = useState<SetOptionItem[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -330,9 +323,9 @@ export function ProductFormPage() {
         formData.append('badges', JSON.stringify(data.badges));
       }
 
-      // Append Colors & Set Options as JSON
-      formData.append('colors', JSON.stringify(colors));
-      formData.append('setOptions', JSON.stringify(setOptions));
+      // Append Colors & Set Options as JSON (only valid/non-empty entries)
+      formData.append('colors', JSON.stringify(colors.filter((c) => c.name.trim())));
+      formData.append('setOptions', JSON.stringify(setOptions.filter((o) => o.name.trim())));
 
       // Append existing and new images
       existingImages.forEach(img => {
@@ -586,10 +579,33 @@ export function ProductFormPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-5">
-              <p className="text-xs text-gray-500">
-                Allow customers to purchase either individual pieces (*Purse Only*, *Pouch Only*, *Wallet Only*) or complete 3-in-1 combo sets with special bundled pricing.
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-gray-500">
+                  Optional: Add bundle tiers (e.g. Purse Only, Pouch Only, or 3-in-1 Set) only if this product has multiple buying options.
+                </p>
+                {setOptions.length === 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      setSetOptions([
+                        { name: 'Purse Only', price: 9500, comparePrice: 12000, includedItems: ['Luxury Handbag', 'Dust Bag'], isDefault: true },
+                        { name: 'Pouch Only', price: 3500, comparePrice: 4500, includedItems: ['Matching Zipper Pouch'], isDefault: false },
+                        { name: 'Complete 3-in-1 Set (Purse + Pouch + Wallet)', price: 14500, comparePrice: 18500, includedItems: ['Luxury Handbag', 'Matching Pouch', 'Artisan Card Wallet'], isDefault: false },
+                      ])
+                    }
+                    className="h-7 text-[11px] font-semibold text-gray-700 border-gray-300 rounded-md"
+                  >
+                    Load 3-Piece Set Preset
+                  </Button>
+                )}
+              </div>
 
+              {setOptions.length === 0 ? (
+                <div className="p-6 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 text-center text-xs text-gray-500">
+                  No option tiers added. This product will use its standard single price above, or click <strong>Add Option Tier</strong> to add custom tiers.
+                </div>
+              ) : (
               <div className="space-y-4">
                 {setOptions.map((opt, idx) => (
                   <div key={idx} className="p-4 rounded-2xl border border-gray-200 bg-gray-50/50 space-y-3">
@@ -660,6 +676,7 @@ export function ProductFormPage() {
                   </div>
                 ))}
               </div>
+              )}
             </CardContent>
           </Card>
 
