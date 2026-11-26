@@ -198,48 +198,9 @@ const getProductBySlug = async (req, res) => {
   res.status(200).json({ success: true, data: product });
 };
 
-// Helper to safely parse JSON-stringified fields from multipart/form-data
-const parseProductBody = (rawBody) => {
-  const data = { ...rawBody };
-  const jsonFields = ['colors', 'setOptions', 'dimensions', 'badges', 'tags', 'images'];
-
-  for (const field of jsonFields) {
-    if (typeof data[field] === 'string') {
-      const trimmed = data[field].trim();
-      if (!trimmed) {
-        data[field] = field === 'dimensions' || field === 'badges' ? {} : [];
-      } else {
-        try {
-          data[field] = JSON.parse(trimmed);
-        } catch {
-          if (field === 'tags') {
-            data[field] = trimmed.split(',').map((t) => t.trim()).filter(Boolean);
-          }
-        }
-      }
-    }
-  }
-
-  for (const boolField of ['isActive', 'isFeatured', 'isOnSale']) {
-    if (data[boolField] === 'true') data[boolField] = true;
-    else if (data[boolField] === 'false') data[boolField] = false;
-  }
-
-  for (const numField of ['price', 'comparePrice', 'stock']) {
-    if (data[numField] === '' || data[numField] === 'undefined' || data[numField] === 'null') {
-      delete data[numField];
-    } else if (typeof data[numField] === 'string' && !Number.isNaN(Number(data[numField]))) {
-      data[numField] = Number(data[numField]);
-    }
-  }
-
-  return data;
-};
-
 const createProduct = async (req, res) => {
-  const productData = parseProductBody(req.body);
-  const { name, category, price, stock, description } = productData;
-  if (!name || !category || price === undefined || stock === undefined || !description) {
+  const { name, category, price, stock, description } = req.body;
+  if (!name || !category || !price || stock === undefined || !description) {
     return res.status(400).json({ success: false, error: 'Please provide all required fields' });
   }
 
@@ -248,21 +209,20 @@ const createProduct = async (req, res) => {
   if (slugExists) {
     slug = `${slug}-${Date.now().toString().slice(-4)}`;
   }
-  productData.slug = slug;
+  req.body.slug = slug;
 
-  const product = await Product.create(productData);
+  const product = await Product.create(req.body);
   res.status(201).json({ success: true, data: product });
 };
 
 const updateProduct = async (req, res) => {
   const { id } = req.params;
-  const productData = parseProductBody(req.body);
 
-  if (productData.name) {
-    productData.slug = slugify(productData.name, { lower: true, strict: true });
+  if (req.body.name) {
+    req.body.slug = slugify(req.body.name, { lower: true, strict: true });
   }
 
-  const product = await Product.findByIdAndUpdate(id, productData, {
+  const product = await Product.findByIdAndUpdate(id, req.body, {
     returnDocument: 'after',
     runValidators: true,
   });
