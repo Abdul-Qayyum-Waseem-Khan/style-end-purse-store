@@ -14,8 +14,8 @@ const getRpID = () => {
 };
 const authChallengesStore = {};
 
-// Helper to attach cookies
-const attachCookiesToResponse = ({ res, user }) => {
+// Helper to attach cookies and return signed token
+const attachCookiesToResponse = ({ req, res, user }) => {
   const token = jwt.sign(
     { userId: user._id, role: user.role },
     process.env.JWT_SECRET,
@@ -28,21 +28,28 @@ const attachCookiesToResponse = ({ res, user }) => {
     { expiresIn: '7d' }
   );
 
+  const isHttps =
+    req?.secure ||
+    req?.headers?.['x-forwarded-proto'] === 'https' ||
+    process.env.NODE_ENV === 'production';
+
   res.cookie('token', token, {
     httpOnly: true,
-    secure: true,
+    secure: isHttps,
     signed: false,
     maxAge: 1000 * 60 * 60 * 24, // 1 day
-    sameSite: 'none',
+    sameSite: isHttps ? 'none' : 'lax',
   });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: true,
+    secure: isHttps,
     signed: false,
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-    sameSite: 'none',
+    sameSite: isHttps ? 'none' : 'lax',
   });
+
+  return { token, refreshToken };
 };
 
 const register = async (req, res) => {
@@ -92,14 +99,7 @@ const register = async (req, res) => {
   }
 
   try {
-    const sendPushNotification = require('../utils/sendPushNotification');
     const Notification = require('../models/Notification');
-
-    await sendPushNotification({
-      topic: 'admins',
-      title: 'New Account Created',
-      body: `A new user account was created: ${user.name} (${user.email})`
-    });
 
     // Create Notification documents for all admins
     const admins = await User.find({ role: 'admin' });
@@ -114,7 +114,7 @@ const register = async (req, res) => {
       await Notification.insertMany(adminNotifications);
     }
   } catch (pushErr) {
-    console.error('Failed to send admin push notification or create db notification:', pushErr);
+    console.error('Failed to create admin db notification:', pushErr);
   }
 
   res.status(201).json({
@@ -168,9 +168,10 @@ const login = async (req, res) => {
     });
   }
 
-  attachCookiesToResponse({ res, user });
+  const { token } = attachCookiesToResponse({ req, res, user });
 
   res.status(200).json({
+    token,
     user: { name: user.name, role: user.role, userId: user._id, email: user.email },
     message: 'Logged in successfully',
   });
@@ -347,9 +348,9 @@ const getCurrentUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    // Refresh cookies with latest user role from DB
-    attachCookiesToResponse({ res, user });
-    res.status(200).json({ user });
+    // Refresh cookies & token with latest user role from DB
+    const { token } = attachCookiesToResponse({ req, res, user });
+    res.status(200).json({ token, user });
   } catch (error) {
     res.status(500).json({ error: 'Server Error' });
   }
@@ -378,9 +379,10 @@ const verifyLoginTotp = async (req, res) => {
     });
 
     if (isVerified) {
-      attachCookiesToResponse({ res, user });
+      const { token } = attachCookiesToResponse({ req, res, user });
       res.status(200).json({
-        user: { name: user.name, role: user.role, userId: user._id },
+        token,
+        user: { name: user.name, role: user.role, userId: user._id, email: user.email },
         message: 'Logged in successfully',
       });
     } else {
@@ -461,9 +463,10 @@ const verifyLoginWebAuthn = async (req, res) => {
       await user.save();
       delete authChallengesStore[user._id.toString()];
 
-      attachCookiesToResponse({ res, user });
+      const { token } = attachCookiesToResponse({ req, res, user });
       res.status(200).json({
-        user: { name: user.name, role: user.role, userId: user._id },
+        token,
+        user: { name: user.name, role: user.role, userId: user._id, email: user.email },
         message: 'Logged in successfully',
       });
     } else {

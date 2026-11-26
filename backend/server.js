@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Serverless DB Connection Middleware
 app.use(async (req, res, next) => {
@@ -21,6 +22,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 const allowedOrigins = [
   process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : null,
+  'https://style-end-purse-store-bk32.vercel.app',
   'https://styleendpurse.com',
   'https://www.styleendpurse.com',
   'http://localhost:5173',
