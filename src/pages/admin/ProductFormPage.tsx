@@ -249,18 +249,72 @@ export function ProductFormPage() {
     setSetOptions(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Compress image via Canvas before uploading to save storage & bandwidth
+  const compressImageFile = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const maxDim = 1400;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob || blob.size >= file.size) {
+              resolve(file);
+              return;
+            }
+            const baseName = file.name.replace(/\.[^/.]+$/, '');
+            resolve(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
+          },
+          'image/webp',
+          0.78
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      };
+      img.src = url;
+    });
+  };
+
   // Image & File Handlers
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
       const totalImages = existingImages.length + newImageFiles.length + filesArray.length;
       
       if (totalImages > 8) {
-        toast.error('You can upload up to 8 high-resolution images.');
+        toast.error('You can upload up to 8 images.');
         return;
       }
 
-      setNewImageFiles(prev => [...prev, ...filesArray]);
+      const compressed = await Promise.all(filesArray.map(compressImageFile));
+      setNewImageFiles(prev => [...prev, ...compressed]);
+      toast.success(`${compressed.length} image(s) compressed & ready`);
     }
   };
 
@@ -406,8 +460,8 @@ export function ProductFormPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Design Name <span className="text-red-500">*</span></label>
-                  <Input {...register('name')} placeholder="e.g. Monogram Quilted Leather Tote" className="h-10 text-xs rounded-xl" />
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Product Title <span className="text-red-500">*</span></label>
+                  <Input {...register('name')} placeholder="e.g. Quilted Leather Tote" className="h-10 text-xs rounded-lg" />
                   {errors.name && <p className="text-[11px] text-red-500">{errors.name.message}</p>}
                 </div>
 
@@ -415,9 +469,9 @@ export function ProductFormPage() {
                   <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Category <span className="text-red-500">*</span></label>
                   <select 
                     {...register('category')}
-                    className="w-full h-10 rounded-xl border border-gray-200 bg-white px-3 text-xs focus:ring-1 focus:ring-[#B8924B] focus:border-[#B8924B]"
+                    className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-xs focus:ring-1 focus:ring-[#111111] focus:border-[#111111]"
                   >
-                    <option value="">Select Boutique Category</option>
+                    <option value="">Select Category</option>
                     {categories.map(c => (
                       <option key={c._id} value={c._id}>{c.name}</option>
                     ))}
@@ -426,37 +480,18 @@ export function ProductFormPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Product Classification</label>
-                  <select 
-                    {...register('productType')}
-                    className="w-full h-10 rounded-xl border border-gray-200 bg-white px-3 text-xs focus:ring-1 focus:ring-[#B8924B] focus:border-[#B8924B]"
-                  >
-                    <option value="single">Single Item (Purse / Pouch / Wallet)</option>
-                    <option value="set">3-Piece Ensemble / Set (Purse + Pouch + Wallet)</option>
-                    <option value="bundle">Curated Combo Capsule</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-700">SKU Code</label>
-                  <Input {...register('SKU')} placeholder="SEP-PARIS-01" className="h-10 text-xs rounded-xl font-mono" />
-                </div>
+              <div className="space-y-1.5 max-w-xs">
+                <label className="text-xs font-bold uppercase tracking-wider text-gray-700">SKU Code (Optional)</label>
+                <Input {...register('SKU')} placeholder="SEP-001" className="h-10 text-xs rounded-lg font-mono" />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Short Editorial Subtitle</label>
-                <Input {...register('shortDescription')} placeholder="e.g. Sculpted from Italian calfskin with 24K gold hardware accents." className="h-10 text-xs rounded-xl" />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Atelier Story & Full Description <span className="text-red-500">*</span></label>
+                <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Product Description <span className="text-red-500">*</span></label>
                 <textarea 
                   {...register('description')} 
                   rows={4}
-                  className="w-full rounded-xl border border-gray-200 p-3 text-xs focus:ring-1 focus:ring-[#B8924B] focus:border-[#B8924B]"
-                  placeholder="Detailed narrative regarding leather grain, construction, interior pockets, and styling versatility..."
+                  className="w-full rounded-lg border border-gray-200 p-3 text-xs focus:ring-1 focus:ring-[#111111] focus:border-[#111111]"
+                  placeholder="Write product details..."
                 />
                 {errors.description && <p className="text-[11px] text-red-500">{errors.description.message}</p>}
               </div>
@@ -680,46 +715,31 @@ export function ProductFormPage() {
             </CardContent>
           </Card>
 
-          {/* 4. Atelier Craftsmanship & Dimensions */}
-          <Card className="border border-gray-200/80 rounded-2xl bg-white shadow-xs">
+          {/* 3. Sizing & Dimensions (Optional) */}
+          <Card className="border border-gray-200/80 rounded-xl bg-white shadow-xs">
             <CardHeader className="border-b border-gray-100 pb-4">
               <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-[#B8924B]" />
-                <span>Atelier Materials & Dimensions</span>
+                <span>Sizing &amp; Dimensions (Optional)</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5 pt-5">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Primary Material</label>
-                  <Input {...register('material')} placeholder="Italian Calfskin Leather" className="h-10 text-xs rounded-xl" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Hardware Plating</label>
-                  <Input {...register('hardware')} placeholder="24K Champagne Gold Plated" className="h-10 text-xs rounded-xl" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Interior Lining</label>
-                  <Input {...register('lining')} placeholder="Custom Monogram Silk Satin" className="h-10 text-xs rounded-xl" />
-                </div>
-              </div>
-
+            <CardContent className="pt-5">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-700">Length</label>
-                  <Input {...register('dimensions.length')} placeholder="28 cm" className="h-9 text-xs rounded-xl" />
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-700">Length / Size</label>
+                  <Input {...register('dimensions.length')} placeholder="e.g. 28 cm / 38" className="h-9 text-xs rounded-lg" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold uppercase tracking-wider text-gray-700">Width</label>
-                  <Input {...register('dimensions.width')} placeholder="12 cm" className="h-9 text-xs rounded-xl" />
+                  <Input {...register('dimensions.width')} placeholder="12 cm" className="h-9 text-xs rounded-lg" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold uppercase tracking-wider text-gray-700">Height</label>
-                  <Input {...register('dimensions.height')} placeholder="20 cm" className="h-9 text-xs rounded-xl" />
+                  <Input {...register('dimensions.height')} placeholder="20 cm" className="h-9 text-xs rounded-lg" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold uppercase tracking-wider text-gray-700">Strap Drop</label>
-                  <Input {...register('dimensions.strapDrop')} placeholder="55 cm (Adj.)" className="h-9 text-xs rounded-xl" />
+                  <Input {...register('dimensions.strapDrop')} placeholder="55 cm" className="h-9 text-xs rounded-lg" />
                 </div>
               </div>
             </CardContent>

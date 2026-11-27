@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { useCartStore } from '../../store/cartStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import { useAuth } from '../../hooks/useAuth';
 import { useCategories } from '../../hooks/useCategories';
 import { useProducts } from '../../hooks/useProducts';
@@ -42,8 +43,13 @@ export function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const { itemCount, setDrawerOpen } = useCartStore();
+  const { topBar, fetchSettings } = useSettingsStore();
   const { isAuthenticated, user, logout } = useAuth();
   const { categories } = useCategories();
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
   
   // Real-time dynamic product search filtered by category & keyword
   const { products } = useProducts({ 
@@ -144,27 +150,72 @@ export function Header() {
     <>
       <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md transition-all duration-200">
         
-        {/* 1. Calm, Single-Line Top Bar (Adaptive for Mobile) */}
-        <div className="bg-[#111111] text-white text-[10px] sm:text-[11px] font-normal tracking-wide py-1.5 sm:py-2 px-3 sm:px-4 text-center border-b border-white/5">
-          <div className="container mx-auto flex items-center justify-between">
-            <span className="hidden lg:inline text-gray-400 text-[10.5px]">
-              Doorstep Inspection & Cash on Delivery Across Pakistan
-            </span>
-            <span className="w-full lg:w-auto text-center font-medium truncate">
-              Complimentary shipping on orders above PKR 5,000
-            </span>
-            <span className="hidden lg:inline text-gray-400 font-mono text-[10.5px]">
-              PKR (Rs.)
-            </span>
+        {/* 1. Dynamic Top Announcement Bar (Managed in Admin Settings) */}
+        {topBar?.enabled && (topBar.leftText || topBar.centerText || topBar.rightText) && (
+          <div className="bg-[#111111] text-white text-[10px] sm:text-[11px] font-normal tracking-wide py-1.5 sm:py-2 px-3 sm:px-4 text-center border-b border-white/5">
+            <div className="container mx-auto flex items-center justify-between">
+              <span className="hidden lg:inline text-gray-400 text-[10.5px]">
+                {topBar.leftText}
+              </span>
+              <span className="w-full lg:w-auto text-center font-medium truncate">
+                {topBar.centerText}
+              </span>
+              <span className="hidden lg:inline text-gray-400 font-mono text-[10.5px]">
+                {topBar.rightText}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 2. Main Navigation Bar */}
-        <div className={`w-full border-b border-gray-100 transition-all duration-200 ${
+        <div className={`w-full border-b border-gray-100 transition-all duration-200 relative ${
           isScrolled ? 'py-2.5 sm:py-3 shadow-xs' : 'py-3 sm:py-4'
         }`}>
           <div className="container mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4">
-            
+            {isSearchOpen ? (
+              /* Inline Navbar Search Bar (hides logo & icons cleanly while open) */
+              <div className="w-full flex items-center gap-2 sm:gap-3 animate-in fade-in duration-150">
+                <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center relative">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3.5 pointer-events-none" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search handbags, shoes, clutches, sets..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-10 pl-10 pr-20 rounded-full border border-gray-200 text-xs sm:text-sm focus:outline-hidden focus:border-black bg-gray-50 focus:bg-white transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-16 text-gray-400 hover:text-gray-700 p-1 text-xs"
+                      aria-label="Clear search"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="absolute right-1 bg-[#111111] hover:bg-black text-white text-[11px] font-semibold px-3.5 py-1.5 rounded-full transition-colors"
+                  >
+                    Search
+                  </button>
+                </form>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    setSearchQuery('');
+                  }}
+                  className="p-2 rounded-full text-gray-600 hover:text-black hover:bg-gray-100 transition-colors shrink-0"
+                  aria-label="Close search"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+            <>
             {/* Left: Mobile Menu Toggle & Brand Logo */}
             <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 shrink-0">
               <button 
@@ -407,8 +458,57 @@ export function Header() {
               </button>
 
             </div>
+            </>
+            )}
 
           </div>
+
+          {/* Inline Live Search Results Dropdown */}
+          {isSearchOpen && searchQuery.trim().length > 1 && (
+            <div className="absolute left-0 right-0 top-full bg-white border-b border-gray-200 shadow-lg z-50 max-h-[70vh] overflow-y-auto">
+              <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-gray-700">
+                    Results ({products.length})
+                  </span>
+                  <button
+                    onClick={handleSearchSubmit}
+                    className="text-xs font-semibold text-[#111111] hover:underline flex items-center gap-1"
+                  >
+                    <span>View All</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                {products.length === 0 ? (
+                  <p className="text-xs text-gray-500 py-4 text-center">No products found.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    {products.map((p: any) => (
+                      <Link
+                        key={p.id || p._id}
+                        to={`/product/${p.slug}`}
+                        onClick={() => {
+                          setIsSearchOpen(false);
+                          setSearchQuery('');
+                        }}
+                        className="group p-2 rounded-lg border border-gray-100 hover:border-gray-300 transition-all bg-white"
+                      >
+                        <div className="aspect-[4/5] rounded-md overflow-hidden bg-gray-50 mb-1.5">
+                          <img
+                            src={p.images?.[0]?.url || p.images?.[0] || ''}
+                            alt={p.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <p className="text-[11px] font-semibold text-gray-900 truncate">{p.name}</p>
+                        <p className="text-[11px] font-bold text-gray-700 font-mono">PKR {(p.price || 0).toLocaleString()}</p>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -437,61 +537,53 @@ export function Header() {
               </div>
 
               {/* Drawer Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-6">
+              <div className="flex-1 overflow-y-auto p-4 space-y-5">
                 
-                {/* User Info Bar in Mobile Menu */}
+                {/* Compact Account Links */}
                 {isAuthenticated ? (
-                  <div className="p-3.5 bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white rounded-2xl shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-black border border-amber-500/40 text-amber-300 flex items-center justify-center font-bold text-sm">
-                        {user?.avatar ? (
-                          <img src={user.avatar} alt="Profile" className="w-full h-full object-cover rounded-xl" />
-                        ) : (
-                          initials
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-white truncate font-serif-luxury">{user?.name}</p>
-                        <p className="text-[10.5px] text-gray-300 truncate">{user?.email}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/10 text-center">
-                      <Link 
-                        to="/account/orders" 
+                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-gray-100">
+                    <Link
+                      to="/account"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="text-xs font-semibold text-[#111111] hover:underline truncate"
+                    >
+                      {user?.name || 'My Account'}
+                    </Link>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link
+                        to="/account/orders"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="text-[11px] font-semibold bg-white/10 hover:bg-white/20 py-1.5 px-2 rounded-lg text-white"
+                        className="text-xs font-medium text-gray-600 hover:text-black px-2.5 py-1 rounded-md bg-gray-100"
                       >
                         Orders
                       </Link>
-                      <Link 
-                        to="/account" 
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="text-[11px] font-semibold bg-amber-400 hover:bg-amber-300 py-1.5 px-2 rounded-lg text-black font-bold"
-                      >
-                        Dashboard
-                      </Link>
+                      {user?.role === 'admin' && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="text-xs font-semibold text-amber-800 px-2.5 py-1 rounded-md bg-amber-50"
+                        >
+                          Admin
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200/70 space-y-2.5">
-                    <p className="text-xs font-bold text-gray-900">Experience Style End Purse</p>
-                    <p className="text-[11px] text-gray-500 leading-relaxed">Sign in to unlock doorstep inspection tracking & wishlist.</p>
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <Link
-                        to="/login"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="text-center bg-[#111111] text-white text-xs font-bold py-2 rounded-xl"
-                      >
-                        Sign In
-                      </Link>
-                      <Link
-                        to="/register"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="text-center bg-white text-black text-xs font-bold py-2 rounded-xl border border-gray-300"
-                      >
-                        Register
-                      </Link>
-                    </div>
+                  <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex-1 text-center bg-[#111111] text-white text-xs font-semibold py-2 rounded-md"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex-1 text-center bg-white text-[#111111] text-xs font-semibold py-2 rounded-md border border-gray-300"
+                    >
+                      Register
+                    </Link>
                   </div>
                 )}
 
@@ -622,168 +714,14 @@ export function Header() {
               </div>
 
               {/* Drawer Footer */}
-              <div className="p-4 bg-gray-50 border-t border-gray-100 text-[11px] text-gray-500 space-y-1.5 shrink-0">
-                <div className="flex items-center gap-1.5 text-emerald-700 font-semibold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Doorstep Inspection Available</span>
-                </div>
-                <p>Cash on Delivery Nationwide Across Pakistan</p>
-                {isAuthenticated && (
+              {isAuthenticated && (
+                <div className="p-4 border-t border-gray-100 shrink-0">
                   <button 
                     onClick={handleLogout}
-                    className="text-red-600 font-semibold pt-1 block text-left"
+                    className="text-xs text-red-600 font-semibold"
                   >
-                    Sign Out of Account
+                    Sign Out
                   </button>
-                )}
-              </div>
-
-            </div>
-          </div>
-        )}
-
-        {/* 4. Fullscreen / Adaptive Search Modal */}
-        {isSearchOpen && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-start justify-center p-3 sm:p-6 sm:pt-20 animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-gray-100 p-4 sm:p-6 animate-in fade-in zoom-in-95 duration-250 ease-[cubic-bezier(0.22,1,0.36,1)] max-h-[90vh] flex flex-col">
-              
-              {/* Search Modal Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
-                <div className="flex items-center gap-2">
-                  <Search className="w-4 h-4 text-amber-600" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-900 font-serif-luxury">
-                    Search Style End Purse Catalog
-                  </span>
-                </div>
-                <button 
-                  onClick={() => setIsSearchOpen(false)}
-                  className="text-gray-400 hover:text-gray-900 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                  aria-label="Close search"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Category Filter Pills (Horizontal Scrolling on Mobile) */}
-              <div className="py-2.5 shrink-0">
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-xs">
-                  {searchCategories.map((cat) => (
-                    <button
-                      key={cat.slug}
-                      type="button"
-                      onClick={() => setSelectedSearchCategory(cat.slug)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all touch-manipulation ${
-                        selectedSearchCategory === cat.slug
-                          ? 'bg-[#111111] text-[#C5A880] shadow-xs'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black'
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Search Form */}
-              <form onSubmit={handleSearchSubmit} className="mt-1 shrink-0">
-                <div className="relative flex items-center">
-                  <Search className="w-4 h-4 text-gray-400 absolute left-3.5" />
-                  <input 
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder={
-                      selectedSearchCategory !== 'all' 
-                        ? `Search within ${searchCategories.find(c => c.slug === selectedSearchCategory)?.name || 'category'}...`
-                        : 'Search luxury bags, heels, clutches, sets...'
-                    }
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-11 sm:h-12 pl-10 pr-24 rounded-2xl border border-gray-200 text-sm focus:outline-hidden focus:border-black focus:ring-1 focus:ring-black bg-gray-50 focus:bg-white transition-all"
-                  />
-                  {searchQuery && (
-                    <button 
-                      type="button"
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-20 text-gray-400 hover:text-gray-600 p-1"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  <button 
-                    type="submit"
-                    className="absolute right-1.5 bg-[#111111] hover:bg-black text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-all shadow-xs"
-                  >
-                    Search
-                  </button>
-                </div>
-              </form>
-
-              {/* Popular Search Tags */}
-              <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px] sm:text-xs shrink-0">
-                <span className="text-gray-400 font-medium">Trending:</span>
-                {['Tote Bag', 'Stilettos', '3-Piece Set', 'Clutches', 'Pouches'].map((tag, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery(tag);
-                      navigate(`/category/${selectedSearchCategory !== 'all' ? selectedSearchCategory : 'all'}?search=${encodeURIComponent(tag)}`);
-                      setIsSearchOpen(false);
-                    }}
-                    className="text-gray-600 hover:text-black bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded-md transition-colors"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-
-              {/* Live Instant Product Preview */}
-              {searchQuery.trim().length > 1 && (
-                <div className="mt-4 pt-3 border-t border-gray-100 overflow-y-auto flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-gray-900">
-                      Matching Products ({products.length})
-                    </span>
-                    <button
-                      onClick={handleSearchSubmit}
-                      className="text-xs font-semibold text-black hover:text-[#9E7D48] underline flex items-center gap-1"
-                    >
-                      <span>View All</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  {products.length === 0 ? (
-                    <p className="text-xs text-gray-500 py-6 text-center">No products found matching "{searchQuery}".</p>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pr-1">
-                      {products.map((p: any) => (
-                        <Link
-                          key={p.id || p._id}
-                          to={`/product/${p.slug}`}
-                          onClick={() => setIsSearchOpen(false)}
-                          className="group p-2 rounded-xl border border-gray-100 hover:border-black/30 hover:shadow-xs transition-all flex flex-col justify-between bg-white"
-                        >
-                          <div className="aspect-[4/5] rounded-lg overflow-hidden bg-gray-50 mb-1.5 border border-gray-100 relative">
-                            <img 
-                              src={p.images?.[0]?.url || p.images?.[0] || 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=400&q=80'} 
-                              alt={p.name} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                            />
-                            {p.category?.name && (
-                              <span className="absolute bottom-1 left-1 bg-black/75 text-white text-[8px] font-semibold px-1 py-0.5 rounded-sm">
-                                {p.category.name}
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-[11px] font-semibold text-gray-900 truncate">{p.name}</p>
-                            <p className="text-[11px] font-bold text-gray-800 font-mono mt-0.5">PKR {(p.price || 0).toLocaleString()}</p>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
 

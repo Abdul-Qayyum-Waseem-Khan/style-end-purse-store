@@ -46,16 +46,10 @@ export function StoreReviewsSection() {
   return (
     <section className="py-14 bg-[#FAF8F5] border-t border-gray-100">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-8">
-          <div>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#A67C38] block mb-1">
-              Client Testimonials
-            </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-[#111111] font-serif-luxury">
-              Loved by Our Clients
-            </h2>
-          </div>
-          <p className="text-xs text-gray-500">Verified experiences across Pakistan</p>
+        <div className="mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-[#111111] font-serif-luxury">
+            Customer Reviews
+          </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

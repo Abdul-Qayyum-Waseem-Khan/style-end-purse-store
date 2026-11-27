@@ -109,7 +109,7 @@ export function HeroSection() {
   }
 
   if (slides.length === 0) {
-    return <LightCleanBanner />;
+    return null;
   }
 
   // Legacy single-template fallback when no responsive-carousel image is used

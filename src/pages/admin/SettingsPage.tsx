@@ -4,12 +4,24 @@ import { Button } from '../../app/components/ui/button';
 import { Input } from '../../app/components/ui/input';
 import { Label } from '../../app/components/ui/label';
 import { toast } from 'sonner';
-import { Settings as SettingsIcon, Save, Store, Truck, CreditCard, Gift, Shield } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Store, Truck, CreditCard, Gift, Shield, Sparkles } from 'lucide-react';
+import { sessionCache } from '../../utils/sessionCache';
 
 export function SettingsPage() {
   const [settings, setSettings] = useState({
     storeName: '',
     contactEmail: '',
+    topBar: {
+      enabled: true,
+      leftText: 'Cash on Delivery Across Pakistan',
+      centerText: 'Free shipping on orders above PKR 5,000',
+      rightText: 'PKR (Rs.)',
+    },
+    brandPillars: [
+      { title: 'Genuine Leather', description: 'Crafted from soft, durable leather built for everyday elegance.' },
+      { title: 'Gold Hardware', description: 'Rust-resistant clasps and zippers with lasting finish.' },
+      { title: 'Handcrafted Finish', description: 'Clean stitching and quality inspection on every piece.' },
+    ],
     deliveryConfig: {
       isOverallFree: false,
       defaultRate: 200,
@@ -26,13 +38,12 @@ export function SettingsPage() {
     instagramLink: '',
     linkedinLink: '',
     newsletterOfferTitle: 'Get 10% OFF Your First Order!',
-    newsletterOfferSubtitle: 'Subscribe to our newsletter and receive exclusive deals, health tips, and new product updates.',
+    newsletterOfferSubtitle: 'Subscribe for exclusive offers and new collection updates.',
     newsletterDiscountCode: '',
     trustBadges: [
-      { icon: 'Shield', title: '100% Authentic', subtitle: 'Sourced directly from authorized distributors' },
-      { icon: 'Truck', title: 'Fast Delivery', subtitle: 'Same-day delivery available across Karachi' },
-      { icon: 'Users', title: 'Expert Guidance', subtitle: 'Free consultation with certified nutritionists' },
-      { icon: 'Gift', title: 'Free Gifts', subtitle: 'Surprise gifts on orders above PKR 3,000' }
+      { icon: 'Shield', title: '100% Authentic', subtitle: 'Quality checked handcrafted pieces' },
+      { icon: 'Truck', title: 'Fast Delivery', subtitle: 'Nationwide delivery across Pakistan' },
+      { icon: 'Gift', title: 'Complimentary Dust Bag', subtitle: 'Protective packaging with every handbag' }
     ],
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +84,7 @@ export function SettingsPage() {
     try {
       setIsSaving(true);
       await axiosInstance.put('/api/v1/admin/settings', settings);
+      sessionCache.invalidate('public_store_settings');
       toast.success('Global settings updated successfully!');
     } catch (error) {
       console.error('Failed to update settings', error);
@@ -490,6 +502,141 @@ export function SettingsPage() {
               className="w-full mt-2 border-dashed"
             >
               + Add Trust Badge
+            </Button>
+          </div>
+        </div>
+
+        {/* Top Announcement Bar */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-[#111111]">
+              <Store className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Top Announcement Bar</h2>
+              <p className="text-sm text-gray-500">Manage the thin top bar above the navigation header</p>
+            </div>
+          </div>
+          <div className="p-6 space-y-4">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-800 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={settings.topBar?.enabled ?? true}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    topBar: { ...prev.topBar, enabled: e.target.checked },
+                  }))
+                }
+                className="rounded border-gray-300"
+              />
+              Show Top Announcement Bar
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label>Left Text (Desktop)</Label>
+                <Input
+                  value={settings.topBar?.leftText || ''}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      topBar: { ...prev.topBar, leftText: e.target.value },
+                    }))
+                  }
+                  placeholder="Cash on Delivery Across Pakistan"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Center Text</Label>
+                <Input
+                  value={settings.topBar?.centerText || ''}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      topBar: { ...prev.topBar, centerText: e.target.value },
+                    }))
+                  }
+                  placeholder="Free shipping on orders above PKR 5,000"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Right Text (Desktop)</Label>
+                <Input
+                  value={settings.topBar?.rightText || ''}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      topBar: { ...prev.topBar, rightText: e.target.value },
+                    }))
+                  }
+                  placeholder="PKR (Rs.)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Homepage Brand Pillars */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-[#A67C38]">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Homepage Brand Pillars</h2>
+              <p className="text-sm text-gray-500">Manage the quality/brand cards shown on the storefront homepage</p>
+            </div>
+          </div>
+          <div className="p-6 space-y-4">
+            {(settings.brandPillars || []).map((pillar, index) => (
+              <div key={index} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex-1 space-y-1.5 w-full">
+                  <Label>Heading</Label>
+                  <Input
+                    value={pillar.title}
+                    onChange={(e) => {
+                      const next = [...(settings.brandPillars || [])];
+                      next[index] = { ...next[index], title: e.target.value };
+                      setSettings((prev) => ({ ...prev, brandPillars: next }));
+                    }}
+                    placeholder="e.g. Genuine Leather"
+                  />
+                </div>
+                <div className="flex-[2] space-y-1.5 w-full">
+                  <Label>Short Note (Optional)</Label>
+                  <Input
+                    value={pillar.description}
+                    onChange={(e) => {
+                      const next = [...(settings.brandPillars || [])];
+                      next[index] = { ...next[index], description: e.target.value };
+                      setSettings((prev) => ({ ...prev, brandPillars: next }));
+                    }}
+                    placeholder="Short 1-line note"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => {
+                    const next = (settings.brandPillars || []).filter((_, i) => i !== index);
+                    setSettings((prev) => ({ ...prev, brandPillars: next }));
+                  }}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200 w-full sm:w-auto"
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const next = [...(settings.brandPillars || []), { title: '', description: '' }];
+                setSettings((prev) => ({ ...prev, brandPillars: next }));
+              }}
+              className="w-full border-dashed"
+            >
+              + Add Brand Pillar
             </Button>
           </div>
         </div>

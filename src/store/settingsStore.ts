@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import axiosInstance from '../api/axios';
+import { sessionCache } from '../utils/sessionCache';
 
 export interface DeliveryRange {
   min: number;
@@ -13,11 +14,28 @@ export interface DeliveryConfig {
   ranges: DeliveryRange[];
 }
 
+export interface TopBarConfig {
+  enabled: boolean;
+  leftText: string;
+  centerText: string;
+  rightText: string;
+}
+
+export interface BrandPillar {
+  title: string;
+  description: string;
+}
+
 interface SettingsState {
   deliveryConfig: DeliveryConfig;
+  topBar: TopBarConfig | null;
+  brandPillars: BrandPillar[];
+  hasLoaded: boolean;
   isLoading: boolean;
-  fetchSettings: () => Promise<void>;
+  fetchSettings: (force?: boolean) => Promise<void>;
 }
+
+const SETTINGS_CACHE_KEY = 'public_store_settings';
 
 const defaultDeliveryConfig: DeliveryConfig = {
   isOverallFree: false,
@@ -28,32 +46,45 @@ const defaultDeliveryConfig: DeliveryConfig = {
   ]
 };
 
-export const useSettingsStore = create<SettingsState>((set) => ({
-  deliveryConfig: defaultDeliveryConfig,
+const cachedInitial = sessionCache.get<any>(SETTINGS_CACHE_KEY);
+
+export const useSettingsStore = create<SettingsState>((set, get) => ({
+  deliveryConfig: cachedInitial?.deliveryConfig || defaultDeliveryConfig,
+  topBar: cachedInitial?.topBar || null,
+  brandPillars: cachedInitial?.brandPillars || [],
+  hasLoaded: Boolean(cachedInitial),
   isLoading: false,
 
-  fetchSettings: async () => {
+  fetchSettings: async (force = false) => {
+    if (!force && get().hasLoaded && sessionCache.isFresh(SETTINGS_CACHE_KEY, 1000 * 60 * 5)) {
+      return;
+    }
     try {
       set({ isLoading: true });
       const { data } = await axiosInstance.get('/api/v1/settings');
-      if (data?.data?.deliveryConfig) {
-        set({ deliveryConfig: data.data.deliveryConfig });
-      } else if (data?.data?.shippingRate !== undefined) {
-        // Fallback to legacy shipping settings if the new config isn't saved yet
-        const rate = data.data.shippingRate || 0;
-        const threshold = data.data.freeShippingThreshold || 99999999;
-        
-        set({
-          deliveryConfig: {
-            isOverallFree: false,
-            defaultRate: rate,
-            ranges: [
-              { min: 0, max: threshold, rate: rate },
-              { min: threshold + 1, max: 99999999, rate: 0 }
-            ]
-          }
-        });
+      const raw = data?.data || {};
+
+      let deliveryConfig = defaultDeliveryConfig;
+      if (raw.deliveryConfig) {
+        deliveryConfig = raw.deliveryConfig;
+      } else if (raw.shippingRate !== undefined) {
+        const rate = raw.shippingRate || 0;
+        const threshold = raw.freeShippingThreshold || 99999999;
+        deliveryConfig = {
+          isOverallFree: false,
+          defaultRate: rate,
+          ranges: [
+            { min: 0, max: threshold, rate },
+            { min: threshold + 1, max: 99999999, rate: 0 }
+          ]
+        };
       }
+
+      const topBar: TopBarConfig | null = raw.topBar || null;
+      const brandPillars: BrandPillar[] = Array.isArray(raw.brandPillars) ? raw.brandPillars : [];
+
+      sessionCache.set(SETTINGS_CACHE_KEY, { deliveryConfig, topBar, brandPillars });
+      set({ deliveryConfig, topBar, brandPillars, hasLoaded: true });
     } catch (error) {
       console.error('Failed to fetch public settings:', error);
     } finally {
