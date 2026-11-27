@@ -193,99 +193,69 @@ export function ProfilePage() {
   };
 
   return (
-    <div className="space-y-10">
-      
-      {/* Luxury Welcome Ribbon */}
-      <div className="relative rounded-2xl bg-gradient-to-r from-[#111111] via-[#1c1c1c] to-[#2a2a2a] text-white p-6 sm:p-8 overflow-hidden shadow-lg border border-black">
-        <div className="absolute right-0 top-0 w-64 h-full bg-gradient-to-l from-[#C5A880]/20 to-transparent pointer-events-none" />
-        
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[#C5A880] text-xs font-semibold tracking-wider uppercase border border-[#C5A880]/30">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Style End Purse Privileged Member</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif-luxury font-normal text-white">
-            Welcome back, <span className="font-semibold text-[#C5A880]">{user?.name || 'Customer'}</span>
-          </h1>
-
-          <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-            Manage your orders, save delivery locations, track shipments in real time, and discover luxury handbags and footwear.
-          </p>
-
-          <div className="flex flex-wrap gap-4 pt-2 text-xs text-gray-300">
-            <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
-              <ShieldCheck className="w-4 h-4 text-[#C5A880]" />
-              <span>100% Genuine Leather</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
-              <Truck className="w-4 h-4 text-[#C5A880]" />
-              <span>Doorstep Inspection</span>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-8">
+      {/* Clean Minimal Welcome Header */}
+      <div className="border-b border-gray-100 pb-5">
+        <h1 className="text-xl sm:text-2xl font-serif-luxury font-bold text-[#111111]">
+          Welcome, {user?.name || 'Customer'}
+        </h1>
       </div>
 
-      {/* Quick Metrics Ribbon */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Total Orders */}
-        <Link 
+      {/* Quick Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Link
           to="/account/orders"
-          className="bg-[#FAFAFA] hover:bg-white p-5 rounded-2xl border border-gray-200/80 transition-all duration-200 hover:shadow-md hover:border-[#111111] group"
+          className="bg-[#FAF8F5] hover:bg-white p-4 rounded-lg border border-gray-200/80 transition-all hover:border-[#111111] group"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Package className="w-5 h-5 text-[#C5A880]" />
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="w-9 h-9 rounded-md bg-[#111111] text-[#C5A880] flex items-center justify-center">
+              <Package className="w-4 h-4" />
             </div>
-            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#111111] group-hover:translate-x-0.5 transition-all" />
           </div>
-          <div className="text-2xl font-bold text-gray-900 font-serif">{orderStats.total}</div>
+          <div className="text-xl sm:text-2xl font-bold text-[#111111]">{orderStats.total}</div>
           <div className="text-xs font-medium text-gray-500 mt-0.5">Total Orders</div>
         </Link>
 
-        {/* Active Deliveries */}
-        <Link 
+        <Link
           to="/account/orders"
-          className="bg-[#FAFAFA] hover:bg-white p-5 rounded-2xl border border-gray-200/80 transition-all duration-200 hover:shadow-md hover:border-[#111111] group"
+          className="bg-[#FAF8F5] hover:bg-white p-4 rounded-lg border border-gray-200/80 transition-all hover:border-[#111111] group"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Truck className="w-5 h-5" />
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="w-9 h-9 rounded-md bg-[#111111] text-[#C5A880] flex items-center justify-center">
+              <Truck className="w-4 h-4" />
             </div>
-            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#111111] group-hover:translate-x-0.5 transition-all" />
           </div>
-          <div className="text-2xl font-bold text-gray-900 font-serif">{orderStats.pending}</div>
+          <div className="text-xl sm:text-2xl font-bold text-[#111111]">{orderStats.pending}</div>
           <div className="text-xs font-medium text-gray-500 mt-0.5">Active Deliveries</div>
         </Link>
 
-        {/* Wishlist Items */}
-        <Link 
+        <Link
           to="/account/wishlist"
-          className="bg-[#FAFAFA] hover:bg-white p-5 rounded-2xl border border-gray-200/80 transition-all duration-200 hover:shadow-md hover:border-[#111111] group"
+          className="bg-[#FAF8F5] hover:bg-white p-4 rounded-lg border border-gray-200/80 transition-all hover:border-[#111111] group"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Heart className="w-5 h-5 fill-rose-600" />
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="w-9 h-9 rounded-md bg-[#111111] text-[#C5A880] flex items-center justify-center">
+              <Heart className="w-4 h-4" />
             </div>
-            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#111111] group-hover:translate-x-0.5 transition-all" />
           </div>
-          <div className="text-2xl font-bold text-gray-900 font-serif">{user?.wishlist?.length || 0}</div>
+          <div className="text-xl sm:text-2xl font-bold text-[#111111]">{user?.wishlist?.length || 0}</div>
           <div className="text-xs font-medium text-gray-500 mt-0.5">Wishlist Items</div>
         </Link>
 
-        {/* Saved Addresses */}
-        <Link 
+        <Link
           to="/account/addresses"
-          className="bg-[#FAFAFA] hover:bg-white p-5 rounded-2xl border border-gray-200/80 transition-all duration-200 hover:shadow-md hover:border-[#111111] group"
+          className="bg-[#FAF8F5] hover:bg-white p-4 rounded-lg border border-gray-200/80 transition-all hover:border-[#111111] group"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <MapPin className="w-5 h-5" />
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="w-9 h-9 rounded-md bg-[#111111] text-[#C5A880] flex items-center justify-center">
+              <MapPin className="w-4 h-4" />
             </div>
-            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-black group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#111111] group-hover:translate-x-0.5 transition-all" />
           </div>
-          <div className="text-2xl font-bold text-gray-900 font-serif">{user?.addresses?.length || 0}</div>
+          <div className="text-xl sm:text-2xl font-bold text-[#111111]">{user?.addresses?.length || 0}</div>
           <div className="text-xs font-medium text-gray-500 mt-0.5">Saved Addresses</div>
         </Link>
 
@@ -307,7 +277,7 @@ export function ProfilePage() {
         </div>
 
         {recentOrders.length === 0 ? (
-          <div className="bg-[#FAFAFA] rounded-2xl p-8 text-center border border-dashed border-gray-200 space-y-3">
+          <div className="bg-[#FAFAFA] rounded-lg p-8 text-center border border-dashed border-gray-200 space-y-3">
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-xs text-gray-400">
               <Package className="w-6 h-6" />
             </div>
@@ -329,7 +299,7 @@ export function ProfilePage() {
               return (
                 <div 
                   key={order._id}
-                  className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 hover:border-black/40 transition-all shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  className="bg-white rounded-lg p-4 sm:p-5 border border-gray-200/80 hover:border-black/40 transition-all shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                 >
                   <div className="flex items-start sm:items-center gap-4 min-w-0">
                     <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200/60 overflow-hidden">
@@ -383,9 +353,9 @@ export function ProfilePage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           
           {/* Avatar Upload */}
-          <div className="flex items-center gap-5 p-4 rounded-2xl bg-[#FAFAFA] border border-gray-200/80">
+          <div className="flex items-center gap-5 p-4 rounded-lg bg-[#FAFAFA] border border-gray-200/80">
             <div className="relative group shrink-0">
-              <div className="w-20 h-20 rounded-2xl bg-[#111111] text-[#C5A880] border-2 border-[#C5A880]/50 overflow-hidden flex items-center justify-center font-serif text-2xl font-bold shadow-sm">
+              <div className="w-20 h-20 rounded-lg bg-[#111111] text-[#C5A880] border-2 border-[#C5A880]/50 overflow-hidden flex items-center justify-center font-serif text-2xl font-bold shadow-sm">
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -394,7 +364,7 @@ export function ProfilePage() {
               </div>
               <label 
                 htmlFor="avatar-upload"
-                className="absolute inset-0 bg-black/50 text-white rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity backdrop-blur-xs"
+                className="absolute inset-0 bg-black/50 text-white rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity backdrop-blur-xs"
               >
                 <Camera className="w-6 h-6 text-white" />
               </label>
@@ -463,7 +433,7 @@ export function ProfilePage() {
           </div>
 
           {/* Password Change Box */}
-          <div className="p-5 rounded-2xl bg-gray-50 border border-gray-200/80 space-y-4">
+          <div className="p-5 rounded-lg bg-gray-50 border border-gray-200/80 space-y-4">
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5" /> Change Password (Optional)

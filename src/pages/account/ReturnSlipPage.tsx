@@ -96,7 +96,7 @@ export function ReturnSlipPage() {
           <Link to="/account/orders" className="flex items-center text-gray-600 hover:text-gray-900 font-medium">
             <ArrowLeft className="w-5 h-5 mr-2" /> Back to Orders
           </Link>
-          <Button onClick={() => window.print()} className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700">
+          <Button onClick={() => window.print()} className="flex items-center gap-2 bg-[#111111] hover:bg-black">
             <Printer className="w-4 h-4" /> Print A4 Slip
           </Button>
         </div>

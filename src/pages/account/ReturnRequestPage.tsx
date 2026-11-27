@@ -106,20 +106,20 @@ export function ReturnRequestPage() {
       <div className="flex items-center justify-between mb-8 relative px-4">
         <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-1 bg-gray-200 rounded-full z-0"></div>
         <div 
-          className="absolute left-4 top-1/2 -translate-y-1/2 h-1 bg-brand-500 rounded-full z-0 transition-all duration-300"
+          className="absolute left-4 top-1/2 -translate-y-1/2 h-1 bg-[#A67C38] rounded-full z-0 transition-all duration-300"
           style={{ width: `calc(${((step - 1) / 2) * 100}% - ${step === 1 ? '1rem' : step === 3 ? '1rem' : '0px'})` }}
         ></div>
         
         {[1, 2, 3].map((num) => (
           <div key={num} className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
-            step >= num ? 'bg-brand-600 text-white' : 'bg-gray-200 text-gray-500'
+            step >= num ? 'bg-[#111111] text-white' : 'bg-gray-200 text-gray-500'
           }`}>
             {step > num ? <span className="text-white">✓</span> : num}
           </div>
         ))}
       </div>
 
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+      <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-100">
         
         {/* STEP 1: POLICIES */}
         {step === 1 && (
@@ -144,7 +144,7 @@ export function ReturnRequestPage() {
             </div>
             <div className="flex justify-between pt-4 border-t border-gray-100">
               <Button type="button" variant="outline" onClick={() => navigate('/account/orders')}>Cancel</Button>
-              <Button onClick={handleNext} className="bg-brand-600 hover:bg-brand-700 text-white px-8">
+              <Button onClick={handleNext} className="bg-[#111111] hover:bg-black text-white px-8">
                 I Accept Policies
               </Button>
             </div>
@@ -165,7 +165,7 @@ export function ReturnRequestPage() {
                 </div>
               </div>
               <div className="flex gap-4 items-start">
-                <div className="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 font-bold text-xl">2</div>
+                <div className="w-12 h-12 rounded-full bg-[#111111] text-[#C5A880] flex items-center justify-center shrink-0 font-bold text-xl">2</div>
                 <div>
                   <h3 className="font-bold text-gray-900 text-lg">Download Documents</h3>
                   <p className="text-gray-600 text-sm mt-1">If approved, you'll receive a professional 3-page PDF. Print all pages. Place Page 1 INSIDE the return package.</p>
@@ -182,7 +182,7 @@ export function ReturnRequestPage() {
 
             <div className="flex justify-between pt-4 border-t border-gray-100">
               <Button variant="outline" onClick={handlePrev}>Back</Button>
-              <Button onClick={handleNext} className="bg-brand-600 hover:bg-brand-700 text-white px-8">
+              <Button onClick={handleNext} className="bg-[#111111] hover:bg-black text-white px-8">
                 Continue to Form
               </Button>
             </div>
@@ -197,7 +197,7 @@ export function ReturnRequestPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Return <span className="text-red-500">*</span></label>
               <select 
-                className="w-full border-gray-300 rounded-xl focus:ring-brand-500 focus:border-brand-500"
+                className="w-full border-gray-300 rounded-xl focus:ring-[#111111] focus:border-[#A67C38]"
                 value={reason}
                 onChange={e => setReason(e.target.value)}
                 required
@@ -215,7 +215,7 @@ export function ReturnRequestPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Additional Details</label>
               <textarea 
                 rows={4}
-                className="w-full border-gray-300 rounded-xl focus:ring-brand-500 focus:border-brand-500"
+                className="w-full border-gray-300 rounded-xl focus:ring-[#111111] focus:border-[#A67C38]"
                 placeholder="Please provide more details about the issue..."
                 value={details}
                 onChange={e => setDetails(e.target.value)}
@@ -240,7 +240,7 @@ export function ReturnRequestPage() {
                   </div>
                 ))}
                 
-                <label className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 hover:border-brand-500 hover:text-brand-600 transition-colors cursor-pointer bg-gray-50">
+                <label className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 hover:border-[#A67C38] hover:text-[#A67C38] transition-colors cursor-pointer bg-gray-50">
                   <Upload className="w-6 h-6 mb-2" />
                   <span className="text-xs font-medium">Add Photo</span>
                   <input 
@@ -258,7 +258,7 @@ export function ReturnRequestPage() {
               <Button type="button" variant="outline" className="rounded-xl px-8" onClick={handlePrev} disabled={isSubmitting}>
                 Back
               </Button>
-              <Button type="submit" className="rounded-xl bg-brand-600 hover:bg-brand-700 px-8" disabled={isSubmitting}>
+              <Button type="submit" className="rounded-xl bg-[#111111] hover:bg-black px-8" disabled={isSubmitting}>
                 {isSubmitting ? 'Submitting...' : 'Submit Request'}
               </Button>
             </div>

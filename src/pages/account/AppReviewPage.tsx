@@ -71,12 +71,11 @@ export function AppReviewPage() {
     <div className="space-y-6">
       
       {/* Header */}
-      <div className="pb-2 border-b border-gray-100">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 font-serif-luxury">Rate Your Experience</h1>
-        <p className="text-xs text-gray-500 mt-0.5">Let us know how your experience with Style End Purse has been</p>
+      <div className="pb-3 border-b border-gray-100">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#111111] font-serif-luxury">Rate Your Experience</h1>
       </div>
 
-      <div className="bg-[#FAFAFA] rounded-2xl border border-gray-200/80 p-6 sm:p-8 space-y-6">
+      <div className="bg-[#FAFAFA] rounded-lg border border-gray-200/80 p-6 sm:p-8 space-y-6">
         
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-900">
@@ -102,7 +101,7 @@ export function AppReviewPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-2xl border border-gray-200/60 shadow-xs">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg border border-gray-200/60 shadow-xs">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">
               Overall Experience Rating

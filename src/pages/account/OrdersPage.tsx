@@ -152,7 +152,7 @@ export function OrdersPage() {
       </div>
 
       {orders.length === 0 ? (
-        <div className="text-center py-16 bg-[#FAFAFA] rounded-2xl border border-dashed border-gray-200 space-y-4">
+        <div className="text-center py-16 bg-[#FAFAFA] rounded-lg border border-dashed border-gray-200 space-y-4">
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-xs text-gray-400">
             <Package className="w-8 h-8" />
           </div>
@@ -177,7 +177,7 @@ export function OrdersPage() {
             return (
               <div 
                 key={order._id}
-                className="bg-white rounded-2xl border border-gray-200/90 overflow-hidden shadow-xs hover:border-black/30 transition-all"
+                className="bg-white rounded-lg border border-gray-200/90 overflow-hidden shadow-xs hover:border-black/30 transition-all"
               >
                 {/* Order Top Bar */}
                 <div 
@@ -220,14 +220,14 @@ export function OrdersPage() {
                   <div className="p-5 sm:p-7 border-t border-gray-100 space-y-6">
                     
                     {/* Modern Timeline */}
-                    <div className="bg-gray-50/60 rounded-2xl border border-gray-100 p-2 sm:p-4">
+                    <div className="bg-gray-50/60 rounded-lg border border-gray-100 p-2 sm:p-4">
                       {renderModernTimeline(order.orderStatus)}
                     </div>
 
                     {/* Order Items */}
                     <div className="space-y-3">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700">Purchased Items</h4>
-                      <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden">
+                      <div className="divide-y divide-gray-100 border border-gray-100 rounded-lg overflow-hidden">
                         {(order.items || []).map((item: any, idx: number) => {
                           const itemTotal = ((item.price || 0) * (item.quantity || 1)).toLocaleString();
                           const imgUrl = item.product?.images?.[0]?.url || item.image || null;
@@ -297,7 +297,7 @@ export function OrdersPage() {
                           className="text-xs font-semibold rounded-full border-gray-300 hover:bg-gray-50"
                         >
                           <Link to={`/account/return/${order._id}`}>
-                            <RotateCcw className="w-3.5 h-3.5 mr-1.5 text-orange-600" />
+                            <RotateCcw className="w-3.5 h-3.5 mr-1.5 text-[#A67C38]" />
                             Request Return / Exchange
                           </Link>
                         </Button>
@@ -323,7 +323,7 @@ export function OrdersPage() {
 
       {/* Invoice Modal Dialog */}
       <Dialog open={!!previewOrder} onOpenChange={(open) => !open && setPreviewOrder(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6 bg-white rounded-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6 bg-white rounded-lg">
           <DialogHeader>
             <DialogTitle className="text-lg font-serif font-bold text-gray-900">Style End Purse — Official Invoice</DialogTitle>
           </DialogHeader>

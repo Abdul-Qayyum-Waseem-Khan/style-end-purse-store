@@ -54,18 +54,15 @@ export function WishlistPage() {
     <div className="space-y-6">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-gray-100">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 font-serif-luxury">My Saved Wishlist</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Your curated shortlist of luxury bags, clutches, and accessories</p>
-        </div>
-        <div className="text-xs font-semibold text-gray-600 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200/80 shrink-0 self-start sm:self-auto">
-          {wishlist.length} {wishlist.length === 1 ? 'Item' : 'Items'} Saved
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#111111] font-serif-luxury">My Wishlist</h1>
+        <div className="text-xs font-semibold text-gray-600 bg-[#FAF8F5] px-3 py-1.5 rounded-md border border-gray-200/80 shrink-0 self-start sm:self-auto">
+          {wishlist.length} {wishlist.length === 1 ? 'Item' : 'Items'}
         </div>
       </div>
 
       {wishlist.length === 0 ? (
-        <div className="text-center py-16 bg-[#FAFAFA] rounded-2xl border border-dashed border-gray-200 space-y-4">
+        <div className="text-center py-16 bg-[#FAFAFA] rounded-lg border border-dashed border-gray-200 space-y-4">
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-xs text-gray-400">
             <Heart className="w-8 h-8" />
           </div>

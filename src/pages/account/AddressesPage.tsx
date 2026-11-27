@@ -145,7 +145,7 @@ export function AddressesPage() {
             </Button>
           </DialogTrigger>
           
-          <DialogContent className="sm:max-w-[540px] rounded-3xl p-0 overflow-hidden border border-gray-100 bg-white shadow-2xl">
+          <DialogContent className="sm:max-w-[540px] rounded-lg p-0 overflow-hidden border border-gray-100 bg-white shadow-2xl">
             <div className="px-6 py-5 bg-[#111111] text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-white/10 text-[#C5A880] flex items-center justify-center">
@@ -282,7 +282,7 @@ export function AddressesPage() {
       </div>
 
       {addresses.length === 0 ? (
-        <div className="text-center py-16 bg-[#FAFAFA] rounded-2xl border border-dashed border-gray-200 space-y-4">
+        <div className="text-center py-16 bg-[#FAFAFA] rounded-lg border border-dashed border-gray-200 space-y-4">
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-xs text-gray-400">
             <MapPin className="w-8 h-8" />
           </div>
@@ -301,7 +301,7 @@ export function AddressesPage() {
           {addresses.map((address) => (
             <div 
               key={address._id} 
-              className={`relative bg-white rounded-2xl p-6 transition-all duration-200 border ${
+              className={`relative bg-white rounded-lg p-6 transition-all duration-200 border ${
                 address.isDefault 
                   ? 'border-black shadow-md ring-1 ring-black/10' 
                   : 'border-gray-200 hover:border-gray-400 shadow-xs'
