@@ -26,11 +26,20 @@ export interface BrandPillar {
   description: string;
 }
 
+export interface TrustBadge {
+  icon?: string;
+  title: string;
+  subtitle?: string;
+}
+
 interface SettingsState {
   deliveryConfig: DeliveryConfig;
   topBar: TopBarConfig | null;
   brandPillars: BrandPillar[];
-  hasLoaded: boolean;
+  trustBadges: TrustBadge[];
+  showCustomerCount: boolean;
+  customerCount: number | null;
+  hasFetchedThisLoad: boolean;
   isLoading: boolean;
   fetchSettings: (force?: boolean) => Promise<void>;
 }
@@ -52,17 +61,25 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   deliveryConfig: cachedInitial?.deliveryConfig || defaultDeliveryConfig,
   topBar: cachedInitial?.topBar || null,
   brandPillars: cachedInitial?.brandPillars || [],
-  hasLoaded: Boolean(cachedInitial),
+  trustBadges: cachedInitial?.trustBadges || [],
+  showCustomerCount: cachedInitial?.showCustomerCount || false,
+  customerCount: cachedInitial?.customerCount ?? null,
+  hasFetchedThisLoad: false,
   isLoading: false,
 
   fetchSettings: async (force = false) => {
-    if (!force && get().hasLoaded && sessionCache.isFresh(SETTINGS_CACHE_KEY, 1000 * 60 * 5)) {
+    // Only skip if already fetched in this JS page load (so F5 refresh always gets latest from DB)
+    if (!force && get().hasFetchedThisLoad) {
       return;
     }
     try {
       set({ isLoading: true });
-      const { data } = await axiosInstance.get('/api/v1/settings');
+      const [{ data }, statsRes] = await Promise.all([
+        axiosInstance.get('/api/v1/settings'),
+        axiosInstance.get('/api/v1/store/stats').catch(() => ({ data: null })),
+      ]);
       const raw = data?.data || {};
+      const statsData = statsRes?.data?.data || {};
 
       let deliveryConfig = defaultDeliveryConfig;
       if (raw.deliveryConfig) {
@@ -82,9 +99,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
       const topBar: TopBarConfig | null = raw.topBar || null;
       const brandPillars: BrandPillar[] = Array.isArray(raw.brandPillars) ? raw.brandPillars : [];
+      const trustBadges: TrustBadge[] = Array.isArray(raw.trustBadges) ? raw.trustBadges : [];
+      const showCustomerCount = Boolean(statsData.showCustomerCount ?? raw.showCustomerCount);
+      const customerCount = typeof statsData.customerCount === 'number' ? statsData.customerCount : null;
 
-      sessionCache.set(SETTINGS_CACHE_KEY, { deliveryConfig, topBar, brandPillars });
-      set({ deliveryConfig, topBar, brandPillars, hasLoaded: true });
+      sessionCache.set(SETTINGS_CACHE_KEY, { deliveryConfig, topBar, brandPillars, trustBadges, showCustomerCount, customerCount });
+      set({ deliveryConfig, topBar, brandPillars, trustBadges, showCustomerCount, customerCount, hasFetchedThisLoad: true });
     } catch (error) {
       console.error('Failed to fetch public settings:', error);
     } finally {

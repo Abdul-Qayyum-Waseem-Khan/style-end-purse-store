@@ -31,42 +31,8 @@ export const MarketingAnalyticsPage = () => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
-  const [exchangeRate, setExchangeRate] = useState<number>(278.5);
-
-  useEffect(() => {
-    const fetchRate = async () => {
-      try {
-        const res = await fetch('https://open.er-api.com/v6/latest/USD');
-        const rateData = await res.json();
-        if (rateData?.rates?.PKR) {
-          setExchangeRate(rateData.rates.PKR);
-        }
-      } catch (err) {
-        console.error('Failed to fetch exchange rate:', err);
-      }
-    };
-    fetchRate();
-  }, []);
-
-  const displayData = useMemo(() => {
-    if (!data) return null;
-    return {
-      ...data,
-      kpis: {
-        ...data.kpis,
-        totalRevenue: data.kpis.totalRevenue * exchangeRate,
-        aov: data.kpis.aov * exchangeRate,
-      },
-      ordersBySource: data.ordersBySource.map(item => ({
-        ...item,
-        revenue: item.revenue * exchangeRate
-      })),
-      ordersByCampaign: data.ordersByCampaign.map(item => ({
-        ...item,
-        revenue: item.revenue * exchangeRate
-      }))
-    };
-  }, [data, exchangeRate]);
+  // Order totals are already stored in PKR; no USD->PKR multiplication needed
+  const displayData = data;
 
   const fetchAnalytics = async (startDate?: string, endDate?: string) => {
     setLoading(true);
@@ -117,7 +83,9 @@ export const MarketingAnalyticsPage = () => {
 
   const handleCustomFilter = () => {
     if (customStartDate && customEndDate) {
-      fetchAnalytics(new Date(customStartDate).toISOString(), new Date(customEndDate).toISOString());
+      const start = new Date(`${customStartDate}T00:00:00`);
+      const end = new Date(`${customEndDate}T23:59:59.999`);
+      fetchAnalytics(start.toISOString(), end.toISOString());
     }
   };
 

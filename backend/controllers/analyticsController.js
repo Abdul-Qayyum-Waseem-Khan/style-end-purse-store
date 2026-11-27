@@ -9,22 +9,28 @@ const getMarketingAnalytics = async (req, res) => {
     const { startDate, endDate } = req.query;
 
     let dateFilter = {};
-    if (startDate && endDate) {
-      dateFilter = {
-        createdAt: {
-          $gte: new Date(startDate),
-          $lte: new Date(endDate),
-        },
-      };
-    }
-
-    // Prepare date filter for Visitor.lastVisit
     let visitorDateFilter = {};
     if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      // Include full end day when a date-only string or midnight timestamp is passed
+      if (
+        (typeof endDate === 'string' && endDate.length <= 10) ||
+        (end.getUTCHours() === 0 && end.getUTCMinutes() === 0 && end.getUTCSeconds() === 0 && end.getUTCMilliseconds() === 0)
+      ) {
+        end.setUTCHours(23, 59, 59, 999);
+      }
+
+      dateFilter = {
+        createdAt: {
+          $gte: start,
+          $lte: end,
+        },
+      };
       visitorDateFilter = {
         lastVisit: {
-          $gte: new Date(startDate),
-          $lte: new Date(endDate),
+          $gte: start,
+          $lte: end,
         },
       };
     }

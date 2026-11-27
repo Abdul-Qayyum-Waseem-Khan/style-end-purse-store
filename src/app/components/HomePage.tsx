@@ -15,7 +15,7 @@ export function HomePage() {
   const { products, isLoading } = useProducts({ limit: 12 });
   const { categories, isLoading: categoriesLoading } = useCategories();
   const { blogs } = useBlogs({ limit: 3 });
-  const { brandPillars, fetchSettings } = useSettingsStore();
+  const { brandPillars, showCustomerCount, customerCount, fetchSettings } = useSettingsStore();
 
   useEffect(() => {
     fetchSettings();
@@ -105,9 +105,17 @@ export function HomePage() {
         <div className="container mx-auto px-4 md:px-8">
           
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
-            <h2 className="font-serif-luxury text-xl sm:text-2xl font-bold text-[#111111]">
-              Featured Products
-            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="font-serif-luxury text-xl sm:text-2xl font-bold text-[#111111]">
+                Featured Products
+              </h2>
+              {showCustomerCount && customerCount !== null && (
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#111111] bg-white border border-gray-200 px-3 py-1 rounded-md shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  {customerCount.toLocaleString()}+ Customers
+                </span>
+              )}
+            </div>
 
             {/* Filter Tabs */}
             <div className="flex items-center gap-5 overflow-x-auto pb-1 scrollbar-hide text-xs font-semibold uppercase tracking-wider">

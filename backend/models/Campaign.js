@@ -15,7 +15,7 @@ const CampaignSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['draft', 'sent'],
+    enum: ['draft', 'sending', 'sent'],
     default: 'draft',
   },
   sentAt: {

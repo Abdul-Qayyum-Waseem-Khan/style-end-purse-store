@@ -22,9 +22,9 @@ const createTransporter = () => {
  */
 const sendEmail = async ({ to, subject, html }) => {
   const emailUser = (process.env.EMAIL_USER || '').trim();
-  if (!emailUser || !process.env.EMAIL_PASS) {
-    console.warn('EMAIL_USER or EMAIL_PASS not configured. Skipping email delivery.');
-    return;
+  const emailPass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+  if (!emailUser || !emailPass) {
+    throw new Error('Email credentials (EMAIL_USER / EMAIL_PASS) are not configured.');
   }
 
   try {
@@ -56,7 +56,6 @@ const sendEmail = async ({ to, subject, html }) => {
     console.error(`Error sending email to ${to}: ${error.message}`);
     if (process.env.NODE_ENV === 'development') {
       console.log('Development mode: email error logged.');
-      return;
     }
     throw new Error(`Email could not be sent: ${error.message}`);
   }

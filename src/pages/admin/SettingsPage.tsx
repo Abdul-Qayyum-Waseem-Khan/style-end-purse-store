@@ -6,6 +6,7 @@ import { Label } from '../../app/components/ui/label';
 import { toast } from 'sonner';
 import { Settings as SettingsIcon, Save, Store, Truck, CreditCard, Gift, Shield, Sparkles } from 'lucide-react';
 import { sessionCache } from '../../utils/sessionCache';
+import { useSettingsStore } from '../../store/settingsStore';
 
 export function SettingsPage() {
   const [settings, setSettings] = useState({
@@ -85,6 +86,7 @@ export function SettingsPage() {
       setIsSaving(true);
       await axiosInstance.put('/api/v1/admin/settings', settings);
       sessionCache.invalidate('public_store_settings');
+      await useSettingsStore.getState().fetchSettings(true);
       toast.success('Global settings updated successfully!');
     } catch (error) {
       console.error('Failed to update settings', error);

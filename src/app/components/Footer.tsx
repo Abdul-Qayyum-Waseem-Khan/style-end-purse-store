@@ -1,13 +1,36 @@
-import { Mail, MapPin, Phone, ShieldCheck, Truck, RefreshCw, Award } from 'lucide-react';
+import { Mail, MapPin, Phone, ShieldCheck, Truck, RefreshCw, Award, Star, Gift } from 'lucide-react';
 import { Link } from 'react-router';
 import { Logo } from './Logo';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axios';
+import { useSettingsStore } from '../../store/settingsStore';
 import { toast } from 'sonner';
 
 export function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const { trustBadges, fetchSettings } = useSettingsStore();
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  const renderBadgeIcon = (iconName?: string) => {
+    switch ((iconName || '').toLowerCase()) {
+      case 'truck':
+        return <Truck className="w-5 h-5 text-gray-400 shrink-0" />;
+      case 'gift':
+        return <Gift className="w-5 h-5 text-gray-400 shrink-0" />;
+      case 'star':
+        return <Star className="w-5 h-5 text-gray-400 shrink-0" />;
+      case 'refreshcw':
+        return <RefreshCw className="w-5 h-5 text-gray-400 shrink-0" />;
+      case 'award':
+        return <Award className="w-5 h-5 text-gray-400 shrink-0" />;
+      default:
+        return <ShieldCheck className="w-5 h-5 text-gray-400 shrink-0" />;
+    }
+  };
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,9 +43,8 @@ export function Footer() {
       await axiosInstance.post('/api/v1/newsletter/subscribe', { email: newsletterEmail });
       toast.success('Thank you for subscribing to Style End Purse.');
       setNewsletterEmail('');
-    } catch (err) {
-      toast.success('Thank you for subscribing.');
-      setNewsletterEmail('');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to subscribe. Please try again.');
     } finally {
       setIsSubscribing(false);
     }
@@ -31,44 +53,24 @@ export function Footer() {
   return (
     <footer className="bg-[#111111] text-white font-sans mt-20">
       
-      {/* 1. Value Pillars */}
-      <div className="border-b border-gray-800 py-10">
-        <div className="container mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center md:text-left">
-            <div className="flex flex-col md:flex-row items-center gap-3">
-              <ShieldCheck className="w-5 h-5 text-gray-400 shrink-0" />
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-white">Genuine Leather</h4>
-                <p className="text-[11px] text-gray-400">High quality durable material</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col md:flex-row items-center gap-3">
-              <Truck className="w-5 h-5 text-gray-400 shrink-0" />
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-white">Free Delivery</h4>
-                <p className="text-[11px] text-gray-400">On all orders over PKR 5,000</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col md:flex-row items-center gap-3">
-              <RefreshCw className="w-5 h-5 text-gray-400 shrink-0" />
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-white">Doorstep Inspection</h4>
-                <p className="text-[11px] text-gray-400">Cash on Delivery available</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col md:flex-row items-center gap-3">
-              <Award className="w-5 h-5 text-gray-400 shrink-0" />
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-white">Quality Craftsmanship</h4>
-                <p className="text-[11px] text-gray-400">Handcrafted with care</p>
-              </div>
+      {/* 1. Dynamic Value Pillars (Managed in Admin Settings -> Trust Badges) */}
+      {trustBadges.length > 0 && (
+        <div className="border-b border-gray-800 py-8">
+          <div className="container mx-auto px-4 md:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center md:text-left">
+              {trustBadges.map((badge, idx) => (
+                <div key={idx} className="flex flex-col md:flex-row items-center gap-3">
+                  {renderBadgeIcon(badge.icon)}
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-white">{badge.title}</h4>
+                    {badge.subtitle && <p className="text-[11px] text-gray-400">{badge.subtitle}</p>}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* 2. Main Navigation Columns */}
       <div className="container mx-auto px-4 md:px-8 py-16">

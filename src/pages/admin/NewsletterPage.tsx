@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { Mail, Search, FileDown, Plus, Send, Phone as Whatsapp, Trash2, Edit3, X } from 'lucide-react';
 import axiosInstance from '../../api/axios';
 import { SEO } from '../../app/components/SEO';
@@ -278,7 +279,7 @@ export function NewsletterPage() {
                   </div>
                   
                   <div className="flex-1 mb-6 text-sm text-gray-600 border border-gray-100 p-4 rounded-xl bg-gray-50 line-clamp-3">
-                    <div dangerouslySetInnerHTML={{ __html: campaign.content }} />
+                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(campaign.content) }} />
                   </div>
 
                   <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
