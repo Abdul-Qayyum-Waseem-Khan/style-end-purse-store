@@ -89,12 +89,12 @@ export function ProductCard({ product, badge }: ProductCardProps) {
   return (
     <div 
       ref={cardRef}
-      className="group relative flex flex-col bg-white rounded-lg border border-gray-200/70 p-2 sm:p-2.5 overflow-hidden transition-shadow hover:shadow-sm"
+      className="group relative flex flex-col bg-white rounded-lg border border-gray-200/70 overflow-hidden transition-shadow hover:shadow-sm"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* 1. Image Container (3:4 Ratio) */}
-      <Link to={`/product/${product.slug}`} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F7F7F6] block rounded-md">
+      <Link to={`/product/${product.slug}`} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F7F7F6] block">
         <img 
           src={primaryImage} 
           alt={product.name} 
@@ -152,7 +152,7 @@ export function ProductCard({ product, badge }: ProductCardProps) {
       </Link>
 
       {/* 2. Details */}
-      <div className="pt-3 pb-1 flex flex-col space-y-1">
+      <div className="p-2.5 sm:p-3 flex flex-col space-y-1">
         
         {/* Color Swatch Dots */}
         {product.colors && product.colors.length > 0 && (
