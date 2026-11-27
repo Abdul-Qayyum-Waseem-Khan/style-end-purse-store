@@ -23,8 +23,8 @@ router.get('/:slug', getProductBySlug);
 // Admin routes
 router.get('/admin/all', authenticateUser, authorizeAdmin, getAdminProducts);
 router.put('/admin/bulk-update', authenticateUser, authorizeAdmin, bulkUpdateProducts);
-router.post('/', authenticateUser, authorizeAdmin, upload.array('images', 5), resizeImage, createProduct);
-router.put('/:id', authenticateUser, authorizeAdmin, upload.array('images', 5), resizeImage, updateProduct);
+router.post('/', authenticateUser, authorizeAdmin, upload.array('images', 8), resizeImage, createProduct);
+router.put('/:id', authenticateUser, authorizeAdmin, upload.array('images', 8), resizeImage, updateProduct);
 router.delete('/:id', authenticateUser, authorizeAdmin, deleteProduct);
 
 module.exports = router;

@@ -198,9 +198,62 @@ const getProductBySlug = async (req, res) => {
   res.status(200).json({ success: true, data: product });
 };
 
+// Helper to safely parse JSON-stringified fields and uploaded images from multipart/form-data
+const parseProductBody = (rawBody, files = []) => {
+  const data = { ...rawBody };
+  const jsonFields = ['colors', 'setOptions', 'dimensions', 'badges', 'tags', 'images'];
+
+  for (const field of jsonFields) {
+    if (typeof data[field] === 'string') {
+      const trimmed = data[field].trim();
+      if (!trimmed) {
+        data[field] = field === 'dimensions' || field === 'badges' ? {} : [];
+      } else {
+        try {
+          data[field] = JSON.parse(trimmed);
+        } catch {
+          if (field === 'tags') {
+            data[field] = trimmed.split(',').map((t) => t.trim()).filter(Boolean);
+          }
+        }
+      }
+    }
+  }
+
+  for (const boolField of ['isActive', 'isFeatured', 'isOnSale']) {
+    if (data[boolField] === 'true') data[boolField] = true;
+    else if (data[boolField] === 'false') data[boolField] = false;
+  }
+
+  for (const numField of ['price', 'comparePrice', 'stock']) {
+    if (data[numField] === '' || data[numField] === 'undefined' || data[numField] === 'null') {
+      delete data[numField];
+    } else if (typeof data[numField] === 'string' && !Number.isNaN(Number(data[numField]))) {
+      data[numField] = Number(data[numField]);
+    }
+  }
+
+  // Merge existingImages + newly uploaded Cloudinary files
+  const existingRaw = data.existingImages;
+  const existingList = Array.isArray(existingRaw)
+    ? existingRaw.map((s) => String(s).trim()).filter(Boolean)
+    : typeof existingRaw === 'string'
+    ? existingRaw.split(',').map((s) => s.trim()).filter(Boolean)
+    : [];
+  const uploadedUrls = Array.isArray(files) ? files.map((f) => f.path).filter(Boolean) : [];
+
+  if (existingRaw !== undefined || uploadedUrls.length > 0) {
+    data.images = [...existingList, ...uploadedUrls];
+  }
+  delete data.existingImages;
+
+  return data;
+};
+
 const createProduct = async (req, res) => {
-  const { name, category, price, stock, description } = req.body;
-  if (!name || !category || !price || stock === undefined || !description) {
+  const productData = parseProductBody(req.body, req.files);
+  const { name, category, price, stock, description } = productData;
+  if (!name || !category || price === undefined || stock === undefined || !description) {
     return res.status(400).json({ success: false, error: 'Please provide all required fields' });
   }
 
@@ -209,20 +262,21 @@ const createProduct = async (req, res) => {
   if (slugExists) {
     slug = `${slug}-${Date.now().toString().slice(-4)}`;
   }
-  req.body.slug = slug;
+  productData.slug = slug;
 
-  const product = await Product.create(req.body);
+  const product = await Product.create(productData);
   res.status(201).json({ success: true, data: product });
 };
 
 const updateProduct = async (req, res) => {
   const { id } = req.params;
+  const productData = parseProductBody(req.body, req.files);
 
-  if (req.body.name) {
-    req.body.slug = slugify(req.body.name, { lower: true, strict: true });
+  if (productData.name) {
+    productData.slug = slugify(productData.name, { lower: true, strict: true });
   }
 
-  const product = await Product.findByIdAndUpdate(id, req.body, {
+  const product = await Product.findByIdAndUpdate(id, productData, {
     returnDocument: 'after',
     runValidators: true,
   });
