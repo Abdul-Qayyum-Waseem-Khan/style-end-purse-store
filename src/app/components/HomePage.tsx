@@ -67,20 +67,20 @@ export function HomePage() {
           </div>
 
           {categoriesLoading && displayCategories.length === 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="flex flex-wrap items-start justify-center gap-4 sm:gap-6">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="aspect-[4/3] rounded-lg bg-gray-100 animate-pulse" />
+                <div key={i} className="w-[104px] sm:w-[130px] md:w-[150px] aspect-[4/3] rounded-lg bg-gray-100 animate-pulse" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {displayCategories.slice(0, 4).map((cat) => (
+            <div className="flex flex-wrap items-start justify-center gap-4 sm:gap-6">
+              {displayCategories.map((cat) => (
                 <Link
                   key={cat._id}
                   to={`/category/${cat.slug}`}
-                  className="group block"
+                  className="group block w-[104px] sm:w-[130px] md:w-[150px] text-center"
                 >
-                  <div className="aspect-[4/3] rounded-lg overflow-hidden bg-gray-100 mb-2 border border-gray-100">
+                  <div className="aspect-[4/3] rounded-lg overflow-hidden bg-gray-100 mb-2 border border-gray-200/70">
                     {cat.image && (
                       <img
                         src={cat.image}
@@ -90,7 +90,7 @@ export function HomePage() {
                       />
                     )}
                   </div>
-                  <h3 className="text-xs sm:text-sm font-semibold text-[#111111] group-hover:underline">
+                  <h3 className="text-xs font-semibold text-[#111111] group-hover:underline truncate">
                     {cat.name}
                   </h3>
                 </Link>
