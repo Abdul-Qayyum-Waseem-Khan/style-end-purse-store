@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router';
-import { ShoppingBag, Star, Heart, ChevronRight, ChevronLeft, ShieldCheck, Truck, RefreshCw, Share2, Check, CheckCircle2, Layers, PackageCheck } from 'lucide-react';
+import { ShoppingBag, Star, Heart, ChevronRight, ChevronLeft, ShieldCheck, Truck, RefreshCw, Share2, Check, CheckCircle2, Layers, PackageCheck, Gift, Award } from 'lucide-react';
 import axiosInstance from '../api/axios';
 import { Product, ColorVariant, SetOption } from '../hooks/useProducts';
 import { Button } from '../app/components/ui/button';
 import { ProductReviews } from '../app/components/ProductReviews';
 import { useCartStore } from '../store/cartStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router';
@@ -24,7 +25,7 @@ const RelevantProducts = ({ categoryId, currentProductId }: { categoryId: string
         <h3 className="text-xl font-bold text-gray-900 mb-6">You May Also Like</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-             <div key={i} className="aspect-[3/4] bg-gray-200 animate-pulse rounded-2xl"></div>
+             <div key={i} className="aspect-[3/4] bg-gray-200 animate-pulse rounded-lg"></div>
           ))}
         </div>
       </div>
@@ -90,6 +91,11 @@ export function ProductDetailPage() {
   }, [product, isModalOpen, isVideoPlaying, activeMedia, mediaItems.length]);
 
   const { addItem, setDrawerOpen } = useCartStore();
+  const { trustBadges, fetchSettings } = useSettingsStore();
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
   const { user, isAuthenticated, fetchCurrentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -211,6 +217,27 @@ export function ProductDetailPage() {
         image={product.images?.[0]}
         url={`https://styleendpurse.com/product/${product.slug}`}
         type="product"
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          image: product.images || [],
+          description: product.shortDescription || product.description,
+          sku: product.SKU || product._id,
+          brand: {
+            '@type': 'Brand',
+            name: 'Style End Purse',
+          },
+          offers: {
+            '@type': 'Offer',
+            url: `https://styleendpurse.com/product/${product.slug}`,
+            priceCurrency: 'PKR',
+            price: product.price,
+            availability: (product.stock ?? 0) > 0
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+          },
+        }}
       />
 
       {/* Breadcrumbs */}
@@ -234,7 +261,7 @@ export function ProductDetailPage() {
           {/* Left Column: Media Showcase */}
           <div className="space-y-4">
             <div 
-              className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center cursor-pointer group"
+              className="relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center cursor-pointer group"
               onClick={() => setIsModalOpen(true)}
             >
               {mediaItems[activeMedia]?.type === 'video' ? (
@@ -524,31 +551,35 @@ export function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Trust Badges Strip */}
-            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100 text-center">
-              <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-gray-50">
-                <ShieldCheck className="w-4 h-4 text-gray-700" />
-                <span className="text-[10px] font-semibold text-gray-900 uppercase">100% Genuine</span>
-                <span className="text-[10px] text-gray-500">Quality leather</span>
+            {/* Dynamic Trust Badges Strip (Managed in Admin Settings -> Trust Badges) */}
+            {trustBadges.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-4 border-t border-gray-100 text-center">
+                {trustBadges.slice(0, 3).map((badge, idx) => {
+                  const iconKey = (badge.icon || '').toLowerCase();
+                  const IconComp =
+                    iconKey === 'truck' ? Truck :
+                    iconKey === 'gift' ? Gift :
+                    iconKey === 'star' ? Star :
+                    iconKey === 'award' ? Award :
+                    iconKey === 'refreshcw' ? RefreshCw :
+                    ShieldCheck;
+                  return (
+                    <div key={idx} className="flex flex-col items-center gap-1 p-2.5 rounded-lg bg-[#FAF8F5] border border-gray-100">
+                      <IconComp className="w-4 h-4 text-[#111111]" />
+                      <span className="text-[10px] font-semibold text-[#111111] uppercase">{badge.title}</span>
+                      {badge.subtitle && <span className="text-[10px] text-gray-500">{badge.subtitle}</span>}
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-gray-50">
-                <Truck className="w-4 h-4 text-gray-700" />
-                <span className="text-[10px] font-semibold text-gray-900 uppercase">Fast Delivery</span>
-                <span className="text-[10px] text-gray-500">Cash on Delivery</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 p-2 rounded-lg bg-gray-50">
-                <RefreshCw className="w-4 h-4 text-gray-700" />
-                <span className="text-[10px] font-semibold text-gray-900 uppercase">Easy Returns</span>
-                <span className="text-[10px] text-gray-500">7-day exchange</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
         {/* Product Details & Specifications */}
-        <div className="mt-12 bg-white rounded-2xl p-6 md:p-8 border border-gray-100 space-y-6">
+        <div className="mt-10 bg-white rounded-lg p-5 sm:p-6 md:p-8 border border-gray-200/80 space-y-6">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-3">Product Description</h3>
+            <h3 className="text-lg font-bold text-[#111111] mb-3 font-serif-luxury">Product Description</h3>
             <div className="prose max-w-none text-xs sm:text-sm text-gray-600 leading-relaxed">
               {product.description?.split('\n').map((para, idx) => (
                 <p key={idx} className="mb-2.5">{para}</p>
@@ -556,46 +587,58 @@ export function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Specifications */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-100">
-            <div className="space-y-2.5">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-900">Materials & Hardware</h4>
-              <ul className="space-y-2 text-xs text-gray-600">
-                <li className="flex justify-between py-1 border-b border-gray-100">
-                  <span className="text-gray-500">Material:</span>
-                  <span className="font-medium text-gray-900">{product.material || 'Premium Leather'}</span>
-                </li>
-                <li className="flex justify-between py-1 border-b border-gray-100">
-                  <span className="text-gray-500">Hardware:</span>
-                  <span className="font-medium text-gray-900">{product.hardware || 'Gold Plated Clasps & Zippers'}</span>
-                </li>
-                <li className="flex justify-between py-1 border-b border-gray-100">
-                  <span className="text-gray-500">Lining:</span>
-                  <span className="font-medium text-gray-900">{product.lining || 'Fabric Lining'}</span>
-                </li>
-              </ul>
-            </div>
+          {/* Specifications (Mobile-responsive stacked rows) */}
+          {(product.material || product.hardware || product.lining || product.dimensions?.length || product.dimensions?.width || product.dimensions?.height || product.dimensions?.strapDrop) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-100">
+              {(product.material || product.hardware || product.lining) && (
+                <div className="space-y-2.5 bg-[#FAF8F5]/60 p-4 rounded-lg border border-gray-100">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[#111111]">Materials &amp; Hardware</h4>
+                  <ul className="space-y-1.5 text-xs text-gray-600">
+                    {product.material && (
+                      <li className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 py-1.5 border-b border-gray-200/60 last:border-0">
+                        <span className="text-gray-500">Material</span>
+                        <span className="font-medium text-[#111111]">{product.material}</span>
+                      </li>
+                    )}
+                    {product.hardware && (
+                      <li className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 py-1.5 border-b border-gray-200/60 last:border-0">
+                        <span className="text-gray-500">Hardware</span>
+                        <span className="font-medium text-[#111111]">{product.hardware}</span>
+                      </li>
+                    )}
+                    {product.lining && (
+                      <li className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 py-1.5 border-b border-gray-200/60 last:border-0">
+                        <span className="text-gray-500">Lining</span>
+                        <span className="font-medium text-[#111111]">{product.lining}</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
 
-            <div className="space-y-2.5">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-900">Size & Dimensions</h4>
-              <ul className="space-y-2 text-xs text-gray-600">
-                <li className="flex justify-between py-1 border-b border-gray-100">
-                  <span className="text-gray-500">Length × Width × Height:</span>
-                  <span className="font-medium text-gray-900">
-                    {product.dimensions?.length || '28 cm'} × {product.dimensions?.width || '12 cm'} × {product.dimensions?.height || '20 cm'}
-                  </span>
-                </li>
-                <li className="flex justify-between py-1 border-b border-gray-100">
-                  <span className="text-gray-500">Strap:</span>
-                  <span className="font-medium text-gray-900">{product.dimensions?.strapDrop || 'Adjustable Strap'}</span>
-                </li>
-                <li className="flex justify-between py-1 border-b border-gray-100">
-                  <span className="text-gray-500">Closure:</span>
-                  <span className="font-medium text-gray-900">Lock / Zipper Closure</span>
-                </li>
-              </ul>
+              {(product.dimensions?.length || product.dimensions?.width || product.dimensions?.height || product.dimensions?.strapDrop) && (
+                <div className="space-y-2.5 bg-[#FAF8F5]/60 p-4 rounded-lg border border-gray-100">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[#111111]">Size &amp; Dimensions</h4>
+                  <ul className="space-y-1.5 text-xs text-gray-600">
+                    {(product.dimensions?.length || product.dimensions?.width || product.dimensions?.height) && (
+                      <li className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 py-1.5 border-b border-gray-200/60 last:border-0">
+                        <span className="text-gray-500">Dimensions (L × W × H)</span>
+                        <span className="font-medium text-[#111111]">
+                          {[product.dimensions?.length, product.dimensions?.width, product.dimensions?.height].filter(Boolean).join(' × ')}
+                        </span>
+                      </li>
+                    )}
+                    {product.dimensions?.strapDrop && (
+                      <li className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 py-1.5 border-b border-gray-200/60 last:border-0">
+                        <span className="text-gray-500">Strap Drop</span>
+                        <span className="font-medium text-[#111111]">{product.dimensions.strapDrop}</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
 
         {/* Customer Reviews */}

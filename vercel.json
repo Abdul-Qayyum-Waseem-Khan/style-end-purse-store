@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
+      "destination": "https://style-end-purse-store.vercel.app/sitemap.xml"
     },
     {
       "source": "/(.*)",

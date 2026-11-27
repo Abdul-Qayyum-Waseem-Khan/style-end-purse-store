@@ -4,6 +4,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import axiosInstance from '../../api/axios';
+import { sessionCache } from '../../utils/sessionCache';
 import { useCategories } from '../../hooks/useCategories';
 import { Button } from '../../app/components/ui/button';
 import { Input } from '../../app/components/ui/input';
@@ -400,12 +401,14 @@ export function ProductFormPage() {
 
       if (isEditMode) {
         await axiosInstance.put(`/api/v1/products/${id}`, formData);
-        toast.success('Boutique masterpiece updated successfully!');
+        toast.success('Product updated successfully!');
       } else {
         await axiosInstance.post('/api/v1/products', formData);
-        toast.success('New luxury design created successfully!');
+        toast.success('New product created successfully!');
       }
 
+      sessionCache.invalidate('products_');
+      sessionCache.invalidate('admin_stats_');
       navigate('/admin/products');
     } catch (err: any) {
       console.error(err);

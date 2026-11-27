@@ -1,17 +1,35 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Blog = require('../models/Blog');
+const Page = require('../models/Page');
+
+const escapeXml = (str = '') =>
+  String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 
 const generateSitemap = async (req, res) => {
-  const host = req.get('host');
-  const dynamicOrigin = host && !host.includes('localhost') ? `${req.protocol}://${host}` : null;
-  const baseUrl = (process.env.CLIENT_URL || dynamicOrigin || 'https://styleendpurse.com').replace(/\/$/, '');
+  const forwardedHost = req.get('x-forwarded-host');
+  const isFrontendHost =
+    forwardedHost &&
+    !forwardedHost.includes('localhost') &&
+    !forwardedHost.includes('style-end-purse-store.vercel.app');
+  const baseUrl = (
+    process.env.CLIENT_URL ||
+    (isFrontendHost ? `https://${forwardedHost}` : 'https://styleendpurse.com')
+  ).replace(/\/$/, '');
 
   try {
-    // Fetch dynamic data
-    const products = await Product.find({ isActive: true }).select('slug updatedAt');
-    const categories = await Category.find({ isActive: true }).select('slug updatedAt');
-    const blogs = await Blog.find({ isActive: true }).select('slug updatedAt');
+    // Fetch dynamic data in parallel
+    const [products, categories, blogs, pages] = await Promise.all([
+      Product.find({ isActive: true }).select('slug updatedAt').lean(),
+      Category.find({ isActive: true }).select('slug updatedAt').lean(),
+      Blog.find({ isActive: true }).select('slug updatedAt').lean(),
+      Page.find({ isActive: true }).select('slug updatedAt').lean(),
+    ]);
 
     const staticPages = [
       { path: '', priority: '1.0', changefreq: 'daily' },
@@ -23,57 +41,59 @@ const generateSitemap = async (req, res) => {
       { path: '/blogs', priority: '0.8', changefreq: 'weekly' },
     ];
 
+    const staticSlugs = new Set(staticPages.map((p) => p.path.replace(/^\//, '')));
+
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
-    // Add static pages
-    staticPages.forEach(page => {
+    const appendUrl = (locPath, changefreq, priority, updatedAt) => {
       xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}${page.path}</loc>\n`;
-      xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
-      xml += `    <priority>${page.priority}</priority>\n`;
+      xml += `    <loc>${escapeXml(`${baseUrl}${locPath}`)}</loc>\n`;
+      if (updatedAt) {
+        xml += `    <lastmod>${new Date(updatedAt).toISOString()}</lastmod>\n`;
+      }
+      xml += `    <changefreq>${changefreq}</changefreq>\n`;
+      xml += `    <priority>${priority}</priority>\n`;
       xml += `  </url>\n`;
+    };
+
+    // Add static pages
+    staticPages.forEach((page) => {
+      appendUrl(page.path, page.changefreq, page.priority);
+    });
+
+    // Add dynamic CMS pages (if not already in staticPages)
+    pages.forEach((page) => {
+      if (page.slug && !staticSlugs.has(page.slug)) {
+        appendUrl(`/${page.slug}`, 'monthly', '0.7', page.updatedAt);
+      }
     });
 
     // Add products
-    products.forEach(product => {
-      xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/product/${product.slug}</loc>\n`;
-      if (product.updatedAt) {
-        xml += `    <lastmod>${product.updatedAt.toISOString()}</lastmod>\n`;
+    products.forEach((product) => {
+      if (product.slug) {
+        appendUrl(`/product/${product.slug}`, 'daily', '0.9', product.updatedAt);
       }
-      xml += `    <changefreq>daily</changefreq>\n`;
-      xml += `    <priority>0.9</priority>\n`;
-      xml += `  </url>\n`;
     });
 
     // Add categories
-    categories.forEach(category => {
-      xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/category/${category.slug}</loc>\n`;
-      if (category.updatedAt) {
-        xml += `    <lastmod>${category.updatedAt.toISOString()}</lastmod>\n`;
+    categories.forEach((category) => {
+      if (category.slug) {
+        appendUrl(`/category/${category.slug}`, 'weekly', '0.8', category.updatedAt);
       }
-      xml += `    <changefreq>weekly</changefreq>\n`;
-      xml += `    <priority>0.8</priority>\n`;
-      xml += `  </url>\n`;
     });
 
     // Add blogs
-    blogs.forEach(blog => {
-      xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/blogs/${blog.slug}</loc>\n`;
-      if (blog.updatedAt) {
-        xml += `    <lastmod>${blog.updatedAt.toISOString()}</lastmod>\n`;
+    blogs.forEach((blog) => {
+      if (blog.slug) {
+        appendUrl(`/blogs/${blog.slug}`, 'monthly', '0.7', blog.updatedAt);
       }
-      xml += `    <changefreq>monthly</changefreq>\n`;
-      xml += `    <priority>0.7</priority>\n`;
-      xml += `  </url>\n`;
     });
 
     xml += '</urlset>';
 
-    res.header('Content-Type', 'application/xml');
+    res.header('Content-Type', 'application/xml; charset=utf-8');
+    res.header('Cache-Control', 'public, max-age=3600');
     res.status(200).send(xml);
   } catch (error) {
     console.error('Sitemap generation error:', error);

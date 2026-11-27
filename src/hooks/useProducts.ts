@@ -154,7 +154,7 @@ export function useProducts(options: UseProductsOptions = {}) {
       setProducts(cachedData.products);
       setPagination(cachedData.pagination);
       setIsLoading(false);
-      if (!sessionCache.isFresh(cacheKey)) {
+      if (!sessionCache.isFresh(cacheKey, 30_000)) {
         fetchProducts(true);
       }
     } else {

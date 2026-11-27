@@ -9,6 +9,7 @@ import { Input } from '../../app/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../app/components/ui/dialog';
 import { Badge } from '../../app/components/ui/badge';
 import axiosInstance from '../../api/axios';
+import { sessionCache } from '../../utils/sessionCache';
 
 const categorySchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -80,6 +81,7 @@ export function CategoriesPage() {
         await axiosInstance.post('/api/v1/categories', data);
         toast.success('Category created');
       }
+      sessionCache.invalidate('categories_');
       handleClose();
       fetchCategories();
     } catch (error: any) {
@@ -93,6 +95,7 @@ export function CategoriesPage() {
     if (!confirm('Are you sure you want to delete this category? Products linked to it might lose their association.')) return;
     try {
       await axiosInstance.delete(`/api/v1/categories/${id}`);
+      sessionCache.invalidate('categories_');
       toast.success('Category deleted');
       fetchCategories();
     } catch (error: any) {

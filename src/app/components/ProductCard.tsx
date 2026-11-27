@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Heart, Plus } from 'lucide-react';
 import { Product, ColorVariant } from '../../hooks/useProducts';
@@ -14,6 +14,19 @@ interface ProductCardProps {
 
 export function ProductCard({ product, badge }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { threshold: 0.45 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   const [selectedColor, setSelectedColor] = useState<ColorVariant | null>(
     product.colors && product.colors.length > 0 ? product.colors[0] : null
   );
@@ -75,12 +88,13 @@ export function ProductCard({ product, badge }: ProductCardProps) {
 
   return (
     <div 
-      className="group relative flex flex-col bg-white"
+      ref={cardRef}
+      className="group relative flex flex-col bg-white rounded-lg border border-gray-200/70 p-2 sm:p-2.5 overflow-hidden transition-shadow hover:shadow-sm"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* 1. Image Container (3:4 Ratio) */}
-      <Link to={`/product/${product.slug}`} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F7F7F6] block rounded-xl">
+      <Link to={`/product/${product.slug}`} className="relative aspect-[3/4] w-full overflow-hidden bg-[#F7F7F6] block rounded-md">
         <img 
           src={primaryImage} 
           alt={product.name} 
@@ -122,12 +136,14 @@ export function ProductCard({ product, badge }: ProductCardProps) {
           <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-black text-black' : 'text-gray-600'}`} />
         </button>
 
-        {/* Quick Add Pill */}
+        {/* Quick Add Button (Desktop: hover, Mobile: scroll into view) */}
         <button 
           onClick={handleQuickAdd}
           disabled={isAddingToCart || product.stock === 0}
-          className={`absolute inset-x-3 bottom-3 bg-white/95 hover:bg-white text-[#111111] text-[11px] font-semibold uppercase tracking-wider py-2.5 rounded-lg shadow-sm border border-gray-100 flex items-center justify-center gap-1.5 transition-all duration-200 z-20 ${
-            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+          className={`absolute inset-x-2.5 bottom-2.5 bg-white/95 hover:bg-white text-[#111111] text-[11px] font-semibold uppercase tracking-wider py-2 rounded-md shadow-sm border border-gray-200/80 flex items-center justify-center gap-1.5 transition-all duration-300 z-20 ${
+            isInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+          } ${
+            isHovered ? 'md:opacity-100 md:translate-y-0 md:pointer-events-auto' : 'md:opacity-0 md:translate-y-2 md:pointer-events-none'
           }`}
         >
           <Plus className="w-3.5 h-3.5" />
